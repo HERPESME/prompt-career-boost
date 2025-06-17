@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AuthDialog } from "@/components/auth/AuthDialog";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { 
   FileText, 
   MessageSquare, 
@@ -21,12 +22,19 @@ import {
   TrendingUp,
   Briefcase,
   GraduationCap,
-  Award
+  Award,
+  LogOut,
+  Sparkles,
+  Zap
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [authDialog, setAuthDialog] = useState({ isOpen: false, mode: "signin" as "signin" | "signup" });
+  const { user, loading, signOut } = useAuthUser();
+  const navigate = useNavigate();
 
   // Mock data for demonstration
   const mockResumes = [
@@ -76,9 +84,34 @@ const Index = () => {
   ];
 
   const handleCreateNew = (type: string) => {
+    if (!user) {
+      setAuthDialog({ isOpen: true, mode: "signin" });
+      return;
+    }
+
+    switch (type) {
+      case "Resume":
+        navigate("/resume");
+        break;
+      case "Cover Letter":
+        navigate("/cover-letter");
+        break;
+      case "Interview Practice":
+        navigate("/interview");
+        break;
+      default:
+        toast({
+          title: `Creating ${type}`,
+          description: "This feature will be available soon!",
+        });
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
     toast({
-      title: `Creating ${type}`,
-      description: "This feature will be available soon!",
+      title: "Signed out",
+      description: "You have been successfully signed out.",
     });
   };
 
@@ -100,44 +133,58 @@ const Index = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
+      {/* Enhanced Header */}
+      <header className="bg-white/90 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Award className="w-5 h-5 text-white" />
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  AI Career Assistant
-                </h1>
+                <div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    CareerBoost AI
+                  </h1>
+                  <p className="text-xs text-gray-500">AI-Powered Career Assistant</p>
+                </div>
               </div>
             </div>
             
-            <nav className="hidden md:flex items-center space-x-6">
+            <nav className="hidden md:flex items-center space-x-1">
               <Button 
                 variant={activeTab === "dashboard" ? "default" : "ghost"}
                 onClick={() => setActiveTab("dashboard")}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200"
               >
                 <TrendingUp className="w-4 h-4" />
                 <span>Dashboard</span>
               </Button>
               <Button 
                 variant={activeTab === "resume" ? "default" : "ghost"}
-                onClick={() => setActiveTab("resume")}
-                className="flex items-center space-x-2"
+                onClick={() => user ? navigate("/resume") : setAuthDialog({ isOpen: true, mode: "signin" })}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200"
               >
                 <FileText className="w-4 h-4" />
                 <span>Resume Builder</span>
               </Button>
               <Button 
                 variant={activeTab === "interview" ? "default" : "ghost"}
-                onClick={() => setActiveTab("interview")}
-                className="flex items-center space-x-2"
+                onClick={() => user ? navigate("/interview") : setAuthDialog({ isOpen: true, mode: "signin" })}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Interview Coach</span>
@@ -145,14 +192,46 @@ const Index = () => {
             </nav>
 
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Button>
-              <Avatar>
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
+              {user ? (
+                <div className="flex items-center space-x-3">
+                  <Button variant="outline" size="sm" className="hidden sm:flex">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
+                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src="/placeholder.svg" />
+                      <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm">
+                        {user.email?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <Button
+                      onClick={handleSignOut}
+                      variant="ghost"
+                      size="sm"
+                      className="text-gray-600 hover:text-gray-900"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setAuthDialog({ isOpen: true, mode: "signin" })}
+                    className="text-gray-700 hover:text-gray-900"
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    onClick={() => setAuthDialog({ isOpen: true, mode: "signup" })}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+                  >
+                    Get Started
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -161,70 +240,89 @@ const Index = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsContent value="dashboard" className="space-y-6">
-            {/* Welcome Section */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-3xl font-bold mb-2">Welcome back, John!</h2>
-                  <p className="text-blue-100 text-lg">Ready to advance your career with AI assistance?</p>
+          <TabsContent value="dashboard" className="space-y-8">
+            {/* Enhanced Welcome Section */}
+            <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl p-8 text-white shadow-2xl">
+              <div className="absolute inset-0 bg-black/10"></div>
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="max-w-2xl">
+                  <h2 className="text-4xl font-bold mb-3">
+                    {user ? `Welcome back, ${user.email?.split('@')[0]}!` : "Welcome to CareerBoost AI"}
+                  </h2>
+                  <p className="text-blue-100 text-lg mb-6">
+                    {user 
+                      ? "Ready to advance your career with AI-powered tools?"
+                      : "Transform your career with AI-powered resume building, cover letters, and interview coaching."
+                    }
+                  </p>
+                  {!user && (
+                    <Button
+                      onClick={() => setAuthDialog({ isOpen: true, mode: "signup" })}
+                      className="bg-white text-purple-600 hover:bg-gray-100 font-semibold px-6 py-3 rounded-lg shadow-lg"
+                    >
+                      <Zap className="w-5 h-5 mr-2" />
+                      Start Your Journey
+                    </Button>
+                  )}
                 </div>
-                <div className="hidden md:block">
-                  <div className="bg-white/20 rounded-lg p-4">
+                <div className="hidden lg:block">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
                     <div className="text-center">
-                      <div className="text-2xl font-bold">12</div>
+                      <div className="text-3xl font-bold mb-1">12</div>
                       <div className="text-sm text-blue-100">Applications sent</div>
                     </div>
                   </div>
                 </div>
               </div>
+              <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-l from-pink-500/30 to-transparent rounded-full blur-2xl"></div>
+              <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-r from-blue-500/30 to-transparent rounded-full blur-2xl"></div>
             </div>
 
-            {/* Quick Actions */}
+            {/* Enhanced Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => handleCreateNew("Resume")}>
-                <CardHeader className="pb-3">
+              <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-1 border-0 bg-gradient-to-br from-blue-50 to-blue-100" onClick={() => handleCreateNew("Resume")}>
+                <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                      <FileText className="w-6 h-6 text-blue-600" />
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl group-hover:from-blue-600 group-hover:to-blue-700 transition-all duration-300 shadow-lg">
+                      <FileText className="w-7 h-7 text-white" />
                     </div>
-                    <Plus className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+                    <Plus className="w-5 h-5 text-blue-400 group-hover:text-blue-600 transition-colors" />
                   </div>
-                  <CardTitle className="text-lg">Create Resume</CardTitle>
-                  <CardDescription>Build an ATS-optimized resume with AI assistance</CardDescription>
+                  <CardTitle className="text-xl text-gray-900">AI Resume Builder</CardTitle>
+                  <CardDescription className="text-gray-600">Build ATS-optimized resumes with AI assistance and real-time feedback</CardDescription>
                 </CardHeader>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => handleCreateNew("Cover Letter")}>
-                <CardHeader className="pb-3">
+              <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-1 border-0 bg-gradient-to-br from-purple-50 to-purple-100" onClick={() => handleCreateNew("Cover Letter")}>
+                <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
-                      <MessageSquare className="w-6 h-6 text-purple-600" />
+                    <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl group-hover:from-purple-600 group-hover:to-purple-700 transition-all duration-300 shadow-lg">
+                      <MessageSquare className="w-7 h-7 text-white" />
                     </div>
-                    <Plus className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+                    <Plus className="w-5 h-5 text-purple-400 group-hover:text-purple-600 transition-colors" />
                   </div>
-                  <CardTitle className="text-lg">Write Cover Letter</CardTitle>
-                  <CardDescription>Generate personalized cover letters instantly</CardDescription>
+                  <CardTitle className="text-xl text-gray-900">Cover Letter Writer</CardTitle>
+                  <CardDescription className="text-gray-600">Generate personalized cover letters tailored to specific job postings</CardDescription>
                 </CardHeader>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => handleCreateNew("Interview Practice")}>
-                <CardHeader className="pb-3">
+              <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-1 border-0 bg-gradient-to-br from-green-50 to-green-100" onClick={() => handleCreateNew("Interview Practice")}>
+                <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
-                      <User className="w-6 h-6 text-green-600" />
+                    <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl group-hover:from-green-600 group-hover:to-green-700 transition-all duration-300 shadow-lg">
+                      <User className="w-7 h-7 text-white" />
                     </div>
-                    <Plus className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+                    <Plus className="w-5 h-5 text-green-400 group-hover:text-green-600 transition-colors" />
                   </div>
-                  <CardTitle className="text-lg">Practice Interview</CardTitle>
-                  <CardDescription>Simulate real interviews with AI feedback</CardDescription>
+                  <CardTitle className="text-xl text-gray-900">Interview Coach</CardTitle>
+                  <CardDescription className="text-gray-600">Practice interviews with AI feedback and personalized coaching tips</CardDescription>
                 </CardHeader>
               </Card>
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
                 <CardContent className="p-6">
                   <div className="flex items-center">
                     <FileText className="w-8 h-8 text-blue-600 mr-3" />
@@ -236,7 +334,7 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
                 <CardContent className="p-6">
                   <div className="flex items-center">
                     <MessageSquare className="w-8 h-8 text-purple-600 mr-3" />
@@ -248,7 +346,7 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
                 <CardContent className="p-6">
                   <div className="flex items-center">
                     <Target className="w-8 h-8 text-green-600 mr-3" />
@@ -260,7 +358,7 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
                 <CardContent className="p-6">
                   <div className="flex items-center">
                     <TrendingUp className="w-8 h-8 text-orange-600 mr-3" />
@@ -276,7 +374,7 @@ const Index = () => {
             {/* Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Recent Resumes */}
-              <Card>
+              <Card className="shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <FileText className="w-5 h-5 mr-2" />
@@ -316,7 +414,7 @@ const Index = () => {
               </Card>
 
               {/* Recent Interviews */}
-              <Card>
+              <Card className="shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <MessageSquare className="w-5 h-5 mr-2" />
@@ -385,6 +483,13 @@ const Index = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      <AuthDialog
+        isOpen={authDialog.isOpen}
+        onClose={() => setAuthDialog(prev => ({ ...prev, isOpen: false }))}
+        mode={authDialog.mode}
+        onModeChange={(mode) => setAuthDialog(prev => ({ ...prev, mode }))}
+      />
     </div>
   );
 };

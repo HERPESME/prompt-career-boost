@@ -9,7 +9,176 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      cover_letters: {
+        Row: {
+          company_name: string | null
+          content: string | null
+          created_at: string | null
+          id: string
+          job_description: string | null
+          position: string | null
+          resume_id: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          job_description?: string | null
+          position?: string | null
+          resume_id?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          company_name?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          job_description?: string | null
+          position?: string | null
+          resume_id?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cover_letters_resume_id_fkey"
+            columns: ["resume_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interviews: {
+        Row: {
+          company_name: string | null
+          created_at: string | null
+          duration_minutes: number | null
+          feedback: Json | null
+          id: string
+          interview_type: string | null
+          position: string | null
+          questions: Json | null
+          responses: Json | null
+          score: number | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          feedback?: Json | null
+          id?: string
+          interview_type?: string | null
+          position?: string | null
+          questions?: Json | null
+          responses?: Json | null
+          score?: number | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          feedback?: Json | null
+          id?: string
+          interview_type?: string | null
+          position?: string | null
+          questions?: Json | null
+          responses?: Json | null
+          score?: number | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          linkedin_url: string | null
+          location: string | null
+          phone: string | null
+          portfolio_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          linkedin_url?: string | null
+          location?: string | null
+          phone?: string | null
+          portfolio_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          linkedin_url?: string | null
+          location?: string | null
+          phone?: string | null
+          portfolio_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      resumes: {
+        Row: {
+          ats_score: number | null
+          content: Json
+          created_at: string | null
+          id: string
+          job_description: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ats_score?: number | null
+          content: Json
+          created_at?: string | null
+          id?: string
+          job_description?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ats_score?: number | null
+          content?: Json
+          created_at?: string | null
+          id?: string
+          job_description?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
