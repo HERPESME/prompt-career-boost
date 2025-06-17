@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -190,9 +189,9 @@ export const InterviewCoach = () => {
           company_name: interviewData.companyName,
           position: interviewData.position,
           interview_type: interviewData.interviewType,
-          questions: questions,
-          responses: responses,
-          feedback: responses.map(r => ({ questionId: r.questionId, feedback: r.feedback })),
+          questions: questions as any,
+          responses: responses as any,
+          feedback: responses.map(r => ({ questionId: r.questionId, feedback: r.feedback })) as any,
           score: overallScore,
           duration_minutes: duration,
           status: "completed",

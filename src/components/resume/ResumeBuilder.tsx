@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -119,7 +118,7 @@ export const ResumeBuilder = () => {
           user_id: user.id,
           title: resumeTitle,
           job_description: jobDescription,
-          content: resumeData,
+          content: resumeData as any,
           ats_score: atsScore,
           status: "completed",
         });
