@@ -1,16 +1,16 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Settings, LogOut, User, FileText, PenTool, MessageSquare } from "lucide-react";
+import { Settings, LogOut, User, FileText, PenTool, MessageSquare, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export const Header = () => {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, loading, signOut } = useAuthUser();
 
   const handleAuthClick = (mode: "signin" | "signup") => {
@@ -28,54 +28,54 @@ export const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 backdrop-blur supports-[backdrop-filter]:bg-gradient-to-r supports-[backdrop-filter]:from-blue-600/80 supports-[backdrop-filter]:via-purple-600/80 supports-[backdrop-filter]:to-indigo-600/80">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <header className="sticky top-0 z-50 w-full border-b border-blue-200/30 bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-6">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-blue-600 font-bold text-lg">C</span>
-              </div>
-              <span className="text-xl font-bold text-white">CareerBoost AI</span>
+          <Link to="/" className="flex items-center space-x-3 flex-shrink-0">
+            <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-lg">C</span>
             </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-700 to-blue-900 bg-clip-text text-transparent">
+              CareerBoost AI
+            </span>
           </Link>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-8 flex-1 justify-center">
             <Link
               to="/resume"
-              className="flex items-center space-x-1 text-white/90 hover:text-white transition-colors"
+              className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
             >
               <FileText className="h-4 w-4" />
-              <span>Resume</span>
+              <span>Resume Builder</span>
             </Link>
             <Link
               to="/cover-letter"
-              className="flex items-center space-x-1 text-white/90 hover:text-white transition-colors"
+              className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
             >
               <PenTool className="h-4 w-4" />
               <span>Cover Letter</span>
             </Link>
             <Link
               to="/interview"
-              className="flex items-center space-x-1 text-white/90 hover:text-white transition-colors"
+              className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
             >
               <MessageSquare className="h-4 w-4" />
-              <span>Interview</span>
+              <span>Interview Coach</span>
             </Link>
           </nav>
 
-          {/* Auth Section */}
-          <div className="flex items-center space-x-4">
+          {/* Desktop Auth Section */}
+          <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
             {loading ? (
-              <div className="w-8 h-8 animate-pulse bg-white/20 rounded-full" />
+              <div className="w-8 h-8 animate-pulse bg-gray-200 rounded-full" />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9">
                       <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                      <AvatarFallback className="bg-white text-blue-600 text-sm font-semibold">
+                      <AvatarFallback className="bg-blue-100 text-blue-700 text-sm font-semibold">
                         {getUserInitials(user.email || "")}
                       </AvatarFallback>
                     </Avatar>
@@ -111,24 +111,134 @@ export const Header = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <Button
                   variant="ghost"
                   onClick={() => handleAuthClick("signin")}
-                  className="text-white hover:bg-white/20"
+                  className="text-gray-700 hover:text-blue-600 font-medium"
                 >
                   Sign In
                 </Button>
                 <Button
                   onClick={() => handleAuthClick("signup")}
-                  className="bg-white text-blue-600 hover:bg-blue-50"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-6 shadow-lg hover:shadow-xl transition-all"
                 >
                   Get Started
                 </Button>
               </div>
             )}
           </div>
+
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden flex items-center space-x-2">
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
+                      <AvatarFallback className="bg-blue-100 text-blue-700 text-sm font-semibold">
+                        {getUserInitials(user.email || "")}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <div className="flex items-center justify-start gap-2 p-2">
+                    <div className="flex flex-col space-y-1 leading-none">
+                      <p className="font-medium">{user.user_metadata?.full_name || "User"}</p>
+                      <p className="w-[200px] truncate text-sm text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings" className="flex items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="text-gray-700 hover:text-blue-600"
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
+
+        {/* Mobile Navigation */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden border-t border-gray-200 bg-white/95 backdrop-blur-md">
+            <div className="container mx-auto px-4 py-4 space-y-3">
+              <Link
+                to="/resume"
+                className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors font-medium py-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <FileText className="h-4 w-4" />
+                <span>Resume Builder</span>
+              </Link>
+              <Link
+                to="/cover-letter"
+                className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors font-medium py-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <PenTool className="h-4 w-4" />
+                <span>Cover Letter</span>
+              </Link>
+              <Link
+                to="/interview"
+                className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors font-medium py-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span>Interview Coach</span>
+              </Link>
+              
+              {!user && (
+                <div className="pt-3 border-t border-gray-200 space-y-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      handleAuthClick("signin");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full justify-start text-gray-700 hover:text-blue-600 font-medium"
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      handleAuthClick("signup");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg"
+                  >
+                    Get Started
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
       <AuthDialog
