@@ -22,7 +22,7 @@ export const Footer = () => {
 
   return (
     <>
-      <footer className="bg-gradient-to-r from-blue-900 via-indigo-900 to-purple-900 text-white">
+      <footer className="bg-gradient-to-r from-warm-brown-800 via-warm-brown-700 to-warm-brown-600 text-white">
         <div className="container mx-auto px-4 py-12">
           {/* Main Footer Content */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
@@ -31,7 +31,7 @@ export const Footer = () => {
               <h3 className="text-xl font-bold text-white">
                 CareerBoost AI
               </h3>
-              <p className="text-blue-100 leading-relaxed">
+              <p className="text-cream-100 leading-relaxed">
                 Empowering professionals to advance their careers with AI-powered tools for resumes, cover letters, and interview preparation.
               </p>
               <div className="flex space-x-4">
@@ -53,13 +53,13 @@ export const Footer = () => {
               <ul className="space-y-2">
                 <li>
                   {user ? (
-                    <Link to="/resume" className="text-blue-100 hover:text-white transition-colors duration-200">
+                    <Link to="/resume" className="text-cream-100 hover:text-white transition-colors duration-200">
                       Resume Builder
                     </Link>
                   ) : (
                     <button 
                       onClick={handleProtectedLink}
-                      className="text-blue-100 hover:text-white transition-colors duration-200 text-left"
+                      className="text-cream-100 hover:text-white transition-colors duration-200 text-left"
                     >
                       Resume Builder
                     </button>
@@ -67,13 +67,13 @@ export const Footer = () => {
                 </li>
                 <li>
                   {user ? (
-                    <Link to="/cover-letter" className="text-blue-100 hover:text-white transition-colors duration-200">
+                    <Link to="/cover-letter" className="text-cream-100 hover:text-white transition-colors duration-200">
                       Cover Letter Generator
                     </Link>
                   ) : (
                     <button 
                       onClick={handleProtectedLink}
-                      className="text-blue-100 hover:text-white transition-colors duration-200 text-left"
+                      className="text-cream-100 hover:text-white transition-colors duration-200 text-left"
                     >
                       Cover Letter Generator
                     </button>
@@ -81,20 +81,20 @@ export const Footer = () => {
                 </li>
                 <li>
                   {user ? (
-                    <Link to="/interview" className="text-blue-100 hover:text-white transition-colors duration-200">
+                    <Link to="/interview" className="text-cream-100 hover:text-white transition-colors duration-200">
                       Interview Coach
                     </Link>
                   ) : (
                     <button 
                       onClick={handleProtectedLink}
-                      className="text-blue-100 hover:text-white transition-colors duration-200 text-left"
+                      className="text-cream-100 hover:text-white transition-colors duration-200 text-left"
                     >
                       Interview Coach
                     </button>
                   )}
                 </li>
                 <li>
-                  <a href="#features" className="text-blue-100 hover:text-white transition-colors duration-200">
+                  <a href="#features" className="text-cream-100 hover:text-white transition-colors duration-200">
                     Features
                   </a>
                 </li>
@@ -106,27 +106,27 @@ export const Footer = () => {
               <h4 className="text-lg font-semibold text-white">Support</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="#" className="text-blue-100 hover:text-white transition-colors duration-200">
+                  <a href="#" className="text-cream-100 hover:text-white transition-colors duration-200">
                     Help Center
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-blue-100 hover:text-white transition-colors duration-200">
+                  <a href="#" className="text-cream-100 hover:text-white transition-colors duration-200">
                     Documentation
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-blue-100 hover:text-white transition-colors duration-200">
+                  <a href="#" className="text-cream-100 hover:text-white transition-colors duration-200">
                     Blog
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-blue-100 hover:text-white transition-colors duration-200">
+                  <a href="#" className="text-cream-100 hover:text-white transition-colors duration-200">
                     Community
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-blue-100 hover:text-white transition-colors duration-200">
+                  <a href="#" className="text-cream-100 hover:text-white transition-colors duration-200">
                     Contact Us
                   </a>
                 </li>
@@ -138,16 +138,16 @@ export const Footer = () => {
               <h4 className="text-lg font-semibold text-white">Get in Touch</h4>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <Mail className="h-4 w-4 text-blue-200" />
-                  <span className="text-blue-100">support@careerboost.ai</span>
+                  <Mail className="h-4 w-4 text-cream-200" />
+                  <span className="text-cream-100">support@careerboost.ai</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Phone className="h-4 w-4 text-blue-200" />
-                  <span className="text-blue-100">+1 (555) 123-4567</span>
+                  <Phone className="h-4 w-4 text-cream-200" />
+                  <span className="text-cream-100">+1 (555) 123-4567</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <MapPin className="h-4 w-4 text-blue-200" />
-                  <span className="text-blue-100">San Francisco, CA</span>
+                  <MapPin className="h-4 w-4 text-cream-200" />
+                  <span className="text-cream-100">San Francisco, CA</span>
                 </div>
               </div>
               
@@ -158,9 +158,9 @@ export const Footer = () => {
                   <input
                     type="email"
                     placeholder="Your email"
-                    className="flex-1 px-3 py-2 rounded-md bg-white/20 border border-white/30 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50"
+                    className="flex-1 px-3 py-2 rounded-md bg-white/20 border border-white/30 text-white placeholder-cream-200 focus:outline-none focus:ring-2 focus:ring-white/50"
                   />
-                  <Button className="bg-white text-blue-700 hover:bg-blue-50 font-semibold">
+                  <Button className="bg-white text-warm-brown-700 hover:bg-cream-100 font-semibold">
                     Subscribe
                   </Button>
                 </div>
@@ -173,23 +173,23 @@ export const Footer = () => {
           {/* Bottom Section */}
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
-              <p className="text-blue-100 text-sm">
+              <p className="text-cream-100 text-sm">
                 © 2024 CareerBoost AI. All rights reserved.
               </p>
               <div className="flex space-x-4 text-sm">
-                <a href="#" className="text-blue-100 hover:text-white transition-colors">
+                <a href="#" className="text-cream-100 hover:text-white transition-colors">
                   Privacy Policy
                 </a>
-                <a href="#" className="text-blue-100 hover:text-white transition-colors">
+                <a href="#" className="text-cream-100 hover:text-white transition-colors">
                   Terms of Service
                 </a>
-                <a href="#" className="text-blue-100 hover:text-white transition-colors">
+                <a href="#" className="text-cream-100 hover:text-white transition-colors">
                   Cookies
                 </a>
               </div>
             </div>
             
-            <div className="flex items-center space-x-1 text-blue-100 text-sm">
+            <div className="flex items-center space-x-1 text-cream-100 text-sm">
               <span>Made with</span>
               <Heart className="h-4 w-4 text-red-400 fill-current" />
               <span>for your career success</span>

@@ -46,11 +46,20 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Custom cream color palette */
-    --cream-50: 45 100% 98%;
-    --cream-100: 45 60% 95%;
-    --cream-200: 45 40% 90%;
-    --cream-300: 45 30% 85%;
+    /* Enhanced cream and warm brown color palette */
+    --cream-50: 30 50% 98%;
+    --cream-100: 28 45% 95%;
+    --cream-200: 26 40% 90%;
+    --cream-300: 24 35% 85%;
+    --warm-brown-50: 25 30% 95%;
+    --warm-brown-100: 22 25% 88%;
+    --warm-brown-200: 20 20% 80%;
+    --warm-brown-300: 18 18% 72%;
+    --warm-brown-400: 16 16% 64%;
+    --warm-brown-500: 14 14% 56%;
+    --warm-brown-600: 12 12% 48%;
+    --warm-brown-700: 10 10% 40%;
+    --warm-brown-800: 8 8% 32%;
   }
 
   .dark {
@@ -113,7 +122,7 @@
   }
 
   .text-gradient {
-    @apply bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-warm-brown-600 via-warm-brown-500 to-warm-brown-400 bg-clip-text text-transparent;
   }
 
   .hover-glow {
@@ -121,10 +130,10 @@
   }
 
   .hover-glow:hover {
-    box-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 0 30px rgba(139, 69, 19, 0.3);
   }
 
-  /* Custom cream colors */
+  /* Enhanced cream colors */
   .bg-cream-50 {
     background-color: hsl(var(--cream-50));
   }
@@ -171,5 +180,90 @@
 
   .border-cream-300 {
     border-color: hsl(var(--cream-300));
+  }
+
+  /* Warm brown colors */
+  .bg-warm-brown-50 {
+    background-color: hsl(var(--warm-brown-50));
+  }
+
+  .bg-warm-brown-100 {
+    background-color: hsl(var(--warm-brown-100));
+  }
+
+  .bg-warm-brown-200 {
+    background-color: hsl(var(--warm-brown-200));
+  }
+
+  .bg-warm-brown-300 {
+    background-color: hsl(var(--warm-brown-300));
+  }
+
+  .bg-warm-brown-400 {
+    background-color: hsl(var(--warm-brown-400));
+  }
+
+  .bg-warm-brown-500 {
+    background-color: hsl(var(--warm-brown-500));
+  }
+
+  .bg-warm-brown-600 {
+    background-color: hsl(var(--warm-brown-600));
+  }
+
+  .bg-warm-brown-700 {
+    background-color: hsl(var(--warm-brown-700));
+  }
+
+  .bg-warm-brown-800 {
+    background-color: hsl(var(--warm-brown-800));
+  }
+
+  .text-warm-brown-50 {
+    color: hsl(var(--warm-brown-50));
+  }
+
+  .text-warm-brown-100 {
+    color: hsl(var(--warm-brown-100));
+  }
+
+  .text-warm-brown-200 {
+    color: hsl(var(--warm-brown-200));
+  }
+
+  .text-warm-brown-300 {
+    color: hsl(var(--warm-brown-300));
+  }
+
+  .text-warm-brown-400 {
+    color: hsl(var(--warm-brown-400));
+  }
+
+  .text-warm-brown-500 {
+    color: hsl(var(--warm-brown-500));
+  }
+
+  .text-warm-brown-600 {
+    color: hsl(var(--warm-brown-600));
+  }
+
+  .text-warm-brown-700 {
+    color: hsl(var(--warm-brown-700));
+  }
+
+  .text-warm-brown-800 {
+    color: hsl(var(--warm-brown-800));
+  }
+
+  .border-warm-brown-100 {
+    border-color: hsl(var(--warm-brown-100));
+  }
+
+  .border-warm-brown-200 {
+    border-color: hsl(var(--warm-brown-200));
+  }
+
+  .border-warm-brown-300 {
+    border-color: hsl(var(--warm-brown-300));
   }
 }

@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Settings, LogOut, User, FileText, PenTool, MessageSquare, Menu, X } from "lucide-react";
+import { Settings, LogOut, User, FileText, PenTool, MessageSquare, Menu, X, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export const Header = () => {
@@ -37,16 +36,20 @@ export const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-amber-200/30 bg-cream-50/95 backdrop-blur-md supports-[backdrop-filter]:bg-cream-50/95 shadow-lg">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-6">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 flex-shrink-0">
-            <div className="w-9 h-9 bg-gradient-to-br from-amber-600 to-orange-700 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <span className="text-white font-bold text-lg">C</span>
+      <header className="sticky top-0 z-50 w-full border-b border-warm-brown-200/40 bg-cream-50/95 backdrop-blur-md supports-[backdrop-filter]:bg-cream-50/95 shadow-lg">
+        <div className="container mx-auto flex h-20 items-center justify-between px-4 lg:px-8">
+          {/* Enhanced Logo */}
+          <Link to="/" className="flex items-center space-x-3 flex-shrink-0 group">
+            <div className="relative w-12 h-12 bg-gradient-to-br from-warm-brown-600 to-warm-brown-800 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-110 animate-float">
+              <div className="absolute inset-0 bg-gradient-to-br from-warm-brown-400 to-warm-brown-600 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <Sparkles className="text-cream-50 font-bold text-xl relative z-10" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-amber-800 to-orange-900 bg-clip-text text-transparent">
-              CareerBoost AI
-            </span>
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold bg-gradient-to-r from-warm-brown-800 to-warm-brown-600 bg-clip-text text-transparent group-hover:from-warm-brown-700 group-hover:to-warm-brown-500 transition-all duration-300">
+                CareerBoost AI
+              </span>
+              <span className="text-xs text-warm-brown-500 font-medium tracking-wide">AI-Powered Career Tools</span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
@@ -54,7 +57,7 @@ export const Header = () => {
             {user ? (
               <Link
                 to="/resume"
-                className="flex items-center space-x-2 text-amber-800 hover:text-orange-700 transition-colors font-medium group"
+                className="flex items-center space-x-2 text-warm-brown-700 hover:text-warm-brown-800 transition-all duration-300 font-medium group px-4 py-2 rounded-lg hover:bg-warm-brown-50"
               >
                 <FileText className="h-4 w-4 group-hover:scale-110 transition-transform" />
                 <span>Resume Builder</span>
@@ -62,7 +65,7 @@ export const Header = () => {
             ) : (
               <button
                 onClick={handleProtectedLink}
-                className="flex items-center space-x-2 text-amber-800 hover:text-orange-700 transition-colors font-medium group"
+                className="flex items-center space-x-2 text-warm-brown-700 hover:text-warm-brown-800 transition-all duration-300 font-medium group px-4 py-2 rounded-lg hover:bg-warm-brown-50"
               >
                 <FileText className="h-4 w-4 group-hover:scale-110 transition-transform" />
                 <span>Resume Builder</span>
@@ -72,7 +75,7 @@ export const Header = () => {
             {user ? (
               <Link
                 to="/cover-letter"
-                className="flex items-center space-x-2 text-amber-800 hover:text-orange-700 transition-colors font-medium group"
+                className="flex items-center space-x-2 text-warm-brown-700 hover:text-warm-brown-800 transition-all duration-300 font-medium group px-4 py-2 rounded-lg hover:bg-warm-brown-50"
               >
                 <PenTool className="h-4 w-4 group-hover:scale-110 transition-transform" />
                 <span>Cover Letter</span>
@@ -80,7 +83,7 @@ export const Header = () => {
             ) : (
               <button
                 onClick={handleProtectedLink}
-                className="flex items-center space-x-2 text-amber-800 hover:text-orange-700 transition-colors font-medium group"
+                className="flex items-center space-x-2 text-warm-brown-700 hover:text-warm-brown-800 transition-all duration-300 font-medium group px-4 py-2 rounded-lg hover:bg-warm-brown-50"
               >
                 <PenTool className="h-4 w-4 group-hover:scale-110 transition-transform" />
                 <span>Cover Letter</span>
@@ -90,7 +93,7 @@ export const Header = () => {
             {user ? (
               <Link
                 to="/interview"
-                className="flex items-center space-x-2 text-amber-800 hover:text-orange-700 transition-colors font-medium group"
+                className="flex items-center space-x-2 text-warm-brown-700 hover:text-warm-brown-800 transition-all duration-300 font-medium group px-4 py-2 rounded-lg hover:bg-warm-brown-50"
               >
                 <MessageSquare className="h-4 w-4 group-hover:scale-110 transition-transform" />
                 <span>Interview Coach</span>
@@ -98,7 +101,7 @@ export const Header = () => {
             ) : (
               <button
                 onClick={handleProtectedLink}
-                className="flex items-center space-x-2 text-amber-800 hover:text-orange-700 transition-colors font-medium group"
+                className="flex items-center space-x-2 text-warm-brown-700 hover:text-warm-brown-800 transition-all duration-300 font-medium group px-4 py-2 rounded-lg hover:bg-warm-brown-50"
               >
                 <MessageSquare className="h-4 w-4 group-hover:scale-110 transition-transform" />
                 <span>Interview Coach</span>
@@ -109,14 +112,14 @@ export const Header = () => {
           {/* Desktop Auth Section */}
           <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
             {loading ? (
-              <div className="w-8 h-8 animate-pulse bg-amber-200 rounded-full" />
+              <div className="w-10 h-10 animate-pulse bg-warm-brown-200 rounded-full" />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 rounded-full hover:bg-amber-100">
-                    <Avatar className="h-9 w-9">
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-warm-brown-100 ring-2 ring-transparent hover:ring-warm-brown-200 transition-all duration-300">
+                    <Avatar className="h-10 w-10">
                       <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                      <AvatarFallback className="bg-amber-100 text-amber-800 text-sm font-semibold">
+                      <AvatarFallback className="bg-warm-brown-100 text-warm-brown-800 text-sm font-semibold">
                         {getUserInitials(user.email || "")}
                       </AvatarFallback>
                     </Avatar>
@@ -156,15 +159,16 @@ export const Header = () => {
                 <Button
                   variant="ghost"
                   onClick={() => handleAuthClick("signin")}
-                  className="text-amber-800 hover:text-orange-700 hover:bg-amber-100 font-medium border border-transparent hover:border-amber-200 transition-all duration-300"
+                  className="text-warm-brown-700 hover:text-warm-brown-800 hover:bg-warm-brown-100 font-medium border border-transparent hover:border-warm-brown-200 transition-all duration-300 px-6 py-2"
                 >
                   Sign In
                 </Button>
                 <Button
                   onClick={() => handleAuthClick("signup")}
-                  className="bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800 text-white font-semibold px-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 border-amber-500/30"
+                  className="bg-gradient-to-r from-warm-brown-600 to-warm-brown-700 hover:from-warm-brown-700 hover:to-warm-brown-800 text-cream-50 font-semibold px-8 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 border-warm-brown-500/30 relative overflow-hidden"
                 >
-                  Get Started
+                  <span className="relative z-10">Get Started</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
                 </Button>
               </div>
             )}
