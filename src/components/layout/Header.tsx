@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AuthDialog } from "@/components/auth/AuthDialog";
@@ -22,60 +23,100 @@ export const Header = () => {
     await signOut();
   };
 
+  const handleProtectedLink = (e: React.MouseEvent) => {
+    if (!user) {
+      e.preventDefault();
+      setAuthMode("signin");
+      setIsAuthOpen(true);
+    }
+  };
+
   const getUserInitials = (email: string) => {
     return email.substring(0, 2).toUpperCase();
   };
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-blue-200/30 bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
+      <header className="sticky top-0 z-50 w-full border-b border-amber-200/30 bg-cream-50/95 backdrop-blur-md supports-[backdrop-filter]:bg-cream-50/95 shadow-lg">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-6">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 flex-shrink-0">
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-9 h-9 bg-gradient-to-br from-amber-600 to-orange-700 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300">
               <span className="text-white font-bold text-lg">C</span>
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-700 to-blue-900 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-amber-800 to-orange-900 bg-clip-text text-transparent">
               CareerBoost AI
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-8 flex-1 justify-center">
-            <Link
-              to="/resume"
-              className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
-            >
-              <FileText className="h-4 w-4" />
-              <span>Resume Builder</span>
-            </Link>
-            <Link
-              to="/cover-letter"
-              className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
-            >
-              <PenTool className="h-4 w-4" />
-              <span>Cover Letter</span>
-            </Link>
-            <Link
-              to="/interview"
-              className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
-            >
-              <MessageSquare className="h-4 w-4" />
-              <span>Interview Coach</span>
-            </Link>
+            {user ? (
+              <Link
+                to="/resume"
+                className="flex items-center space-x-2 text-amber-800 hover:text-orange-700 transition-colors font-medium group"
+              >
+                <FileText className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                <span>Resume Builder</span>
+              </Link>
+            ) : (
+              <button
+                onClick={handleProtectedLink}
+                className="flex items-center space-x-2 text-amber-800 hover:text-orange-700 transition-colors font-medium group"
+              >
+                <FileText className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                <span>Resume Builder</span>
+              </button>
+            )}
+            
+            {user ? (
+              <Link
+                to="/cover-letter"
+                className="flex items-center space-x-2 text-amber-800 hover:text-orange-700 transition-colors font-medium group"
+              >
+                <PenTool className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                <span>Cover Letter</span>
+              </Link>
+            ) : (
+              <button
+                onClick={handleProtectedLink}
+                className="flex items-center space-x-2 text-amber-800 hover:text-orange-700 transition-colors font-medium group"
+              >
+                <PenTool className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                <span>Cover Letter</span>
+              </button>
+            )}
+            
+            {user ? (
+              <Link
+                to="/interview"
+                className="flex items-center space-x-2 text-amber-800 hover:text-orange-700 transition-colors font-medium group"
+              >
+                <MessageSquare className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                <span>Interview Coach</span>
+              </Link>
+            ) : (
+              <button
+                onClick={handleProtectedLink}
+                className="flex items-center space-x-2 text-amber-800 hover:text-orange-700 transition-colors font-medium group"
+              >
+                <MessageSquare className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                <span>Interview Coach</span>
+              </button>
+            )}
           </nav>
 
           {/* Desktop Auth Section */}
           <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
             {loading ? (
-              <div className="w-8 h-8 animate-pulse bg-gray-200 rounded-full" />
+              <div className="w-8 h-8 animate-pulse bg-amber-200 rounded-full" />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full hover:bg-amber-100">
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                      <AvatarFallback className="bg-blue-100 text-blue-700 text-sm font-semibold">
+                      <AvatarFallback className="bg-amber-100 text-amber-800 text-sm font-semibold">
                         {getUserInitials(user.email || "")}
                       </AvatarFallback>
                     </Avatar>
@@ -115,13 +156,13 @@ export const Header = () => {
                 <Button
                   variant="ghost"
                   onClick={() => handleAuthClick("signin")}
-                  className="text-gray-700 hover:text-blue-600 font-medium"
+                  className="text-amber-800 hover:text-orange-700 hover:bg-amber-100 font-medium border border-transparent hover:border-amber-200 transition-all duration-300"
                 >
                   Sign In
                 </Button>
                 <Button
                   onClick={() => handleAuthClick("signup")}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-6 shadow-lg hover:shadow-xl transition-all"
+                  className="bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800 text-white font-semibold px-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 border-amber-500/30"
                 >
                   Get Started
                 </Button>
@@ -134,10 +175,10 @@ export const Header = () => {
             {user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-amber-100">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                      <AvatarFallback className="bg-blue-100 text-blue-700 text-sm font-semibold">
+                      <AvatarFallback className="bg-amber-100 text-amber-800 text-sm font-semibold">
                         {getUserInitials(user.email || "")}
                       </AvatarFallback>
                     </Avatar>
@@ -177,7 +218,7 @@ export const Header = () => {
               variant="ghost"
               size="icon"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-gray-700 hover:text-blue-600"
+              className="text-amber-800 hover:text-orange-700 hover:bg-amber-100"
             >
               {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
@@ -186,42 +227,83 @@ export const Header = () => {
 
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-gray-200 bg-white/95 backdrop-blur-md">
+          <div className="lg:hidden border-t border-amber-200 bg-cream-50/95 backdrop-blur-md">
             <div className="container mx-auto px-4 py-4 space-y-3">
-              <Link
-                to="/resume"
-                className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors font-medium py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <FileText className="h-4 w-4" />
-                <span>Resume Builder</span>
-              </Link>
-              <Link
-                to="/cover-letter"
-                className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors font-medium py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <PenTool className="h-4 w-4" />
-                <span>Cover Letter</span>
-              </Link>
-              <Link
-                to="/interview"
-                className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors font-medium py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <MessageSquare className="h-4 w-4" />
-                <span>Interview Coach</span>
-              </Link>
+              {user ? (
+                <Link
+                  to="/resume"
+                  className="flex items-center space-x-3 text-amber-800 hover:text-orange-700 transition-colors font-medium py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>Resume Builder</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    handleProtectedLink(e);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex items-center space-x-3 text-amber-800 hover:text-orange-700 transition-colors font-medium py-2 w-full text-left"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>Resume Builder</span>
+                </button>
+              )}
+              
+              {user ? (
+                <Link
+                  to="/cover-letter"
+                  className="flex items-center space-x-3 text-amber-800 hover:text-orange-700 transition-colors font-medium py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <PenTool className="h-4 w-4" />
+                  <span>Cover Letter</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    handleProtectedLink(e);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex items-center space-x-3 text-amber-800 hover:text-orange-700 transition-colors font-medium py-2 w-full text-left"
+                >
+                  <PenTool className="h-4 w-4" />
+                  <span>Cover Letter</span>
+                </button>
+              )}
+              
+              {user ? (
+                <Link
+                  to="/interview"
+                  className="flex items-center space-x-3 text-amber-800 hover:text-orange-700 transition-colors font-medium py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span>Interview Coach</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    handleProtectedLink(e);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex items-center space-x-3 text-amber-800 hover:text-orange-700 transition-colors font-medium py-2 w-full text-left"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span>Interview Coach</span>
+                </button>
+              )}
               
               {!user && (
-                <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="pt-3 border-t border-amber-200 space-y-2">
                   <Button
                     variant="ghost"
                     onClick={() => {
                       handleAuthClick("signin");
                       setIsMobileMenuOpen(false);
                     }}
-                    className="w-full justify-start text-gray-700 hover:text-blue-600 font-medium"
+                    className="w-full justify-start text-amber-800 hover:text-orange-700 hover:bg-amber-100 font-medium"
                   >
                     Sign In
                   </Button>
@@ -230,7 +312,7 @@ export const Header = () => {
                       handleAuthClick("signup");
                       setIsMobileMenuOpen(false);
                     }}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg"
+                    className="w-full bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800 text-white font-semibold shadow-lg"
                   >
                     Get Started
                   </Button>

@@ -21,34 +21,34 @@ const Index = () => {
       title: "AI Resume Builder",
       description: "Create ATS-optimized resumes tailored to specific job descriptions with AI assistance.",
       href: "/resume",
-      gradient: "from-blue-600 to-indigo-600",
-      bgGradient: "from-blue-50/80 to-indigo-50/80",
-      hoverGradient: "from-blue-700 to-indigo-700"
+      gradient: "from-amber-600 to-orange-600",
+      bgGradient: "from-amber-50/80 to-orange-50/80",
+      hoverGradient: "from-amber-700 to-orange-700"
     },
     {
       icon: PenTool,
       title: "Cover Letter Generator",
       description: "Generate personalized cover letters that highlight your strengths and match company culture.",
       href: "/cover-letter",
-      gradient: "from-indigo-600 to-purple-600",
-      bgGradient: "from-indigo-50/80 to-purple-50/80",
-      hoverGradient: "from-indigo-700 to-purple-700"
+      gradient: "from-orange-600 to-red-600",
+      bgGradient: "from-orange-50/80 to-red-50/80",
+      hoverGradient: "from-orange-700 to-red-700"
     },
     {
       icon: MessageSquare,
       title: "Interview Coach",
       description: "Practice with AI-powered mock interviews and get detailed feedback to improve your performance.",
       href: "/interview",
-      gradient: "from-purple-600 to-pink-600",
-      bgGradient: "from-purple-50/80 to-pink-50/80",
-      hoverGradient: "from-purple-700 to-pink-700"
+      gradient: "from-red-600 to-pink-600",
+      bgGradient: "from-red-50/80 to-pink-50/80",
+      hoverGradient: "from-red-700 to-pink-700"
     }
   ];
 
   const stats = [
-    { icon: Users, label: "Active Users", value: "50,000+", color: "text-blue-600" },
-    { icon: Award, label: "Success Rate", value: "94%", color: "text-indigo-600" },
-    { icon: Star, label: "Average Rating", value: "4.9/5", color: "text-purple-600" },
+    { icon: Users, label: "Active Users", value: "50,000+", color: "text-amber-600" },
+    { icon: Award, label: "Success Rate", value: "94%", color: "text-orange-600" },
+    { icon: Star, label: "Average Rating", value: "4.9/5", color: "text-red-600" },
     { icon: Zap, label: "Time Saved", value: "10+ hours", color: "text-pink-600" }
   ];
 
@@ -77,16 +77,16 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-cream-50">
       <Header />
       
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-amber-900 via-orange-900 to-red-900">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-32 w-96 h-96 bg-blue-400 rounded-full mix-blend-soft-light filter blur-3xl opacity-20 animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-indigo-400 rounded-full mix-blend-soft-light filter blur-3xl opacity-20 animate-pulse animation-delay-2000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-400 rounded-full mix-blend-soft-light filter blur-3xl opacity-15 animate-pulse animation-delay-4000"></div>
+          <div className="absolute -top-40 -right-32 w-96 h-96 bg-amber-400 rounded-full mix-blend-soft-light filter blur-3xl opacity-20 animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-orange-400 rounded-full mix-blend-soft-light filter blur-3xl opacity-20 animate-pulse animation-delay-2000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-400 rounded-full mix-blend-soft-light filter blur-3xl opacity-15 animate-pulse animation-delay-4000"></div>
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
@@ -98,19 +98,19 @@ const Index = () => {
             
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 text-white leading-tight animate-scale-in">
               Land Your Dream Job with
-              <span className="block bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 bg-clip-text text-transparent mt-2">
+              <span className="block bg-gradient-to-r from-amber-200 via-orange-200 to-red-200 bg-clip-text text-transparent mt-2">
                 AI-Powered Career Tools
               </span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-blue-100 mb-12 leading-relaxed max-w-3xl mx-auto animate-fade-in animation-delay-500">
+            <p className="text-xl md:text-2xl text-amber-100 mb-12 leading-relaxed max-w-3xl mx-auto animate-fade-in animation-delay-500">
               Create compelling resumes, write persuasive cover letters, and ace interviews with our intelligent career platform.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in animation-delay-1000">
               {user ? (
                 <Link to="/resume">
-                  <Button size="lg" className="bg-white text-slate-900 hover:bg-gray-100 px-10 py-6 text-lg font-semibold shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105">
+                  <Button size="lg" className="bg-white text-amber-900 hover:bg-cream-100 px-10 py-6 text-lg font-semibold shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105 border-2 border-amber-200/50">
                     Get Started Now <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
@@ -118,7 +118,7 @@ const Index = () => {
                 <Button 
                   size="lg" 
                   onClick={() => { setAuthMode("signup"); setIsAuthOpen(true); }}
-                  className="bg-white text-slate-900 hover:bg-gray-100 px-10 py-6 text-lg font-semibold shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105"
+                  className="bg-white text-amber-900 hover:bg-cream-100 px-10 py-6 text-lg font-semibold shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105 border-2 border-amber-200/50"
                 >
                   Start Free Today <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -126,9 +126,8 @@ const Index = () => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="px-10 py-6 text-lg border-2 border-white/30 text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300 hover:scale-105 group"
+                className="px-10 py-6 text-lg border-2 border-white/50 text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-300 hover:scale-105 group shadow-lg hover:shadow-white/10"
                 onClick={() => {
-                  // Scroll to demo section or show demo modal
                   document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth' });
                 }}
               >
@@ -140,11 +139,11 @@ const Index = () => {
             <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 animate-fade-in animation-delay-1500">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center group">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 mb-4 group-hover:scale-110 transition-transform duration-300 group-hover:bg-white/20">
                     <stat.icon className="h-8 w-8 text-white" />
                   </div>
                   <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
-                  <div className="text-blue-200 text-sm">{stat.label}</div>
+                  <div className="text-amber-200 text-sm">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -153,25 +152,25 @@ const Index = () => {
       </section>
 
       {/* Demo Section */}
-      <section id="demo-section" className="py-24 bg-white">
+      <section id="demo-section" className="py-24 bg-cream-100">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-amber-900">
               See CareerBoost AI in Action
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-amber-700 max-w-3xl mx-auto">
               Watch how our AI-powered tools can transform your job search in minutes
             </p>
           </div>
           
           <div className="max-w-4xl mx-auto">
-            <div className="aspect-video bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center shadow-2xl">
+            <div className="aspect-video bg-gradient-to-br from-cream-200 to-amber-200 rounded-2xl flex items-center justify-center shadow-2xl border border-amber-300/50">
               <div className="text-center">
-                <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 hover:scale-110 transition-transform duration-300 cursor-pointer">
+                <div className="w-24 h-24 bg-gradient-to-r from-amber-600 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-6 hover:scale-110 transition-transform duration-300 cursor-pointer shadow-lg">
                   <Play className="h-12 w-12 text-white ml-1" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Interactive Demo Coming Soon</h3>
-                <p className="text-gray-600">Experience the power of AI-driven career tools</p>
+                <h3 className="text-2xl font-bold text-amber-900 mb-2">Interactive Demo Coming Soon</h3>
+                <p className="text-amber-700">Experience the power of AI-driven career tools</p>
               </div>
             </div>
           </div>
@@ -179,34 +178,34 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" ref={featuresRef} className="py-24 bg-gray-50 relative overflow-hidden">
+      <section id="features" ref={featuresRef} className="py-24 bg-cream-50 relative overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 rounded-full px-6 py-2 mb-6 font-medium">
+            <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 rounded-full px-6 py-2 mb-6 font-medium border border-amber-200">
               <Sparkles className="h-4 w-4" />
               AI-Powered Tools
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-amber-900">
               Everything You Need to
-              <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Land Your Dream Job</span>
+              <span className="block bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">Land Your Dream Job</span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-amber-700 max-w-3xl mx-auto leading-relaxed">
               Our comprehensive suite of AI-powered tools helps you stand out in today's competitive job market.
             </p>
           </div>
           
           <div className="grid lg:grid-cols-3 gap-8 mb-20">
             {features.map((feature, index) => (
-              <Card key={index} className={`group hover:shadow-2xl transition-all duration-500 border-0 bg-gradient-to-br ${feature.bgGradient} hover:scale-105 overflow-hidden relative backdrop-blur-sm`}>
+              <Card key={index} className={`group hover:shadow-2xl transition-all duration-500 border-0 bg-gradient-to-br ${feature.bgGradient} hover:scale-105 overflow-hidden relative backdrop-blur-sm border border-amber-200/50`}>
                 <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-white/30"></div>
                 <CardHeader className="text-center pb-6 relative z-10">
                   <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.gradient} mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
                     <feature.icon className="h-8 w-8 text-white" />
                   </div>
-                  <CardTitle className="text-xl font-bold text-gray-900 mb-3">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl font-bold text-amber-900 mb-3">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center relative z-10">
-                  <CardDescription className="text-gray-600 mb-8 leading-relaxed">
+                  <CardDescription className="text-amber-700 mb-8 leading-relaxed">
                     {feature.description}
                   </CardDescription>
                   {user ? (
@@ -231,13 +230,13 @@ const Index = () => {
       </section>
 
       {/* Technologies Section */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-cream-100">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-amber-900">
               Optimize for Any Technology Stack
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-amber-700 max-w-3xl mx-auto">
               Our AI understands the requirements for all major programming languages and technologies
             </p>
           </div>
@@ -246,7 +245,7 @@ const Index = () => {
             {technologies.map((tech, index) => (
               <div
                 key={index}
-                className="px-4 py-2 bg-gray-100 hover:bg-blue-100 rounded-full text-gray-700 hover:text-blue-700 transition-all duration-200 cursor-pointer hover:scale-105 border border-gray-200 hover:border-blue-200"
+                className="px-4 py-2 bg-cream-200 hover:bg-amber-200 rounded-full text-amber-800 hover:text-amber-900 transition-all duration-200 cursor-pointer hover:scale-105 border border-amber-300 hover:border-amber-400 shadow-sm hover:shadow-md"
               >
                 {tech}
               </div>
@@ -254,7 +253,7 @@ const Index = () => {
           </div>
           
           <div className="text-center">
-            <Button variant="outline" className="border-2 border-gray-300 hover:border-blue-600 hover:text-blue-600">
+            <Button variant="outline" className="border-2 border-amber-400 hover:border-amber-500 hover:text-amber-900 hover:bg-amber-100 text-amber-800">
               See all technologies <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -262,35 +261,35 @@ const Index = () => {
       </section>
 
       {/* Job Roles Section */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24 bg-cream-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-amber-900">
               Popular Job Roles We Support
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-amber-700 max-w-3xl mx-auto">
               Tailored resume and interview preparation for in-demand positions
             </p>
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {jobRoles.map((role, index) => (
-              <Card key={index} className="hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white border-0 shadow-md">
+              <Card key={index} className="hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white border-0 shadow-md border border-amber-200/50">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <role.icon className="h-6 w-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center border border-amber-200">
+                      <role.icon className="h-6 w-6 text-amber-600" />
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      role.demand === "Very High" ? "bg-red-100 text-red-700" : 
-                      role.demand === "High" ? "bg-orange-100 text-orange-700" : 
-                      "bg-green-100 text-green-700"
+                      role.demand === "Very High" ? "bg-red-100 text-red-700 border border-red-200" : 
+                      role.demand === "High" ? "bg-orange-100 text-orange-700 border border-orange-200" : 
+                      "bg-green-100 text-green-700 border border-green-200"
                     }`}>
                       {role.demand} Demand
                     </span>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{role.title}</h3>
-                  <p className="text-gray-600 text-sm">Specialized resume templates and interview questions</p>
+                  <h3 className="text-lg font-semibold text-amber-900 mb-2">{role.title}</h3>
+                  <p className="text-amber-700 text-sm">Specialized resume templates and interview questions</p>
                 </CardContent>
               </Card>
             ))}
@@ -299,22 +298,22 @@ const Index = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-24 bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10"></div>
+      <section className="py-24 bg-gradient-to-r from-amber-900 via-orange-900 to-red-900 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-600/10 to-red-600/10"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h3 className="text-3xl md:text-4xl font-bold mb-6 text-white">
                 Why Choose CareerBoost AI?
               </h3>
-              <p className="text-xl text-blue-100 mb-8 leading-relaxed">
+              <p className="text-xl text-amber-100 mb-8 leading-relaxed">
                 Join thousands of professionals who have successfully transformed their careers with our cutting-edge AI technology.
               </p>
               {!user && (
                 <Button 
                   size="lg"
                   onClick={() => { setAuthMode("signup"); setIsAuthOpen(true); }}
-                  className="bg-white text-slate-900 hover:bg-gray-100 px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 shadow-xl"
+                  className="bg-white text-amber-900 hover:bg-cream-100 px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 shadow-xl border-2 border-amber-200/50"
                 >
                   Start Your Journey <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -323,8 +322,8 @@ const Index = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {benefits.map((benefit, index) => (
-                <div key={index} className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-4 hover:bg-white/20 transition-all duration-300">
-                  <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center flex-shrink-0">
+                <div key={index} className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-4 hover:bg-white/20 transition-all duration-300 border border-white/20">
+                  <div className="w-6 h-6 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full flex items-center justify-center flex-shrink-0">
                     <Check className="h-3 w-3 text-white" />
                   </div>
                   <span className="text-white font-medium text-sm">{benefit}</span>
