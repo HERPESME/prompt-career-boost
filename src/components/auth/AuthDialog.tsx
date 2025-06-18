@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -71,7 +70,7 @@ export const AuthDialog = ({ isOpen, onClose, mode, onModeChange }: AuthDialogPr
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: "https://careerboostaiweb.netlify.app",
         },
       });
       if (error) throw error;
