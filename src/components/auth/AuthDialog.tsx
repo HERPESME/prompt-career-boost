@@ -67,10 +67,16 @@ export const AuthDialog = ({ isOpen, onClose, mode, onModeChange }: AuthDialogPr
 
   const handleGoogleSignIn = async () => {
     try {
+      // Determine the correct redirect URL based on environment
+      const isProduction = window.location.hostname !== 'localhost';
+      const redirectTo = isProduction 
+        ? "https://careerboostaiweb.netlify.app" 
+        : "http://localhost:8080";
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "https://careerboostaiweb.netlify.app",
+          redirectTo: redirectTo,
         },
       });
       if (error) throw error;
