@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,12 +7,16 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { PricingSection } from "@/components/pricing/PricingSection";
+import { TokenModal } from "@/components/pricing/TokenModal";
+import { useTokens } from "@/hooks/useTokens";
 
 const Index = () => {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signup");
   const { user } = useAuthUser();
   const featuresRef = useRef<HTMLDivElement>(null);
+  const { isTokenModalOpen, currentTokenType, closeTokenModal, tokens } = useTokens();
 
   const features = [
     {
@@ -396,6 +399,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <PricingSection />
+
       {/* Benefits Section */}
       <section className="py-24 bg-gradient-to-r from-warm-brown-800 via-warm-brown-700 to-warm-brown-600 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-warm-brown-600/10 to-warm-brown-800/10"></div>
@@ -440,6 +446,17 @@ const Index = () => {
         onClose={() => setIsAuthOpen(false)}
         mode={authMode}
         onModeChange={setAuthMode}
+      />
+
+      <TokenModal
+        isOpen={isTokenModalOpen}
+        onClose={closeTokenModal}
+        tokenType={currentTokenType}
+        remainingTokens={
+          currentTokenType === 'resume' ? tokens.resume :
+          currentTokenType === 'cover-letter' ? tokens.coverLetter :
+          tokens.interview
+        }
       />
     </div>
   );
