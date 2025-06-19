@@ -26,7 +26,8 @@ const Index = () => {
       href: "/resume",
       gradient: "from-warm-brown-500 to-warm-brown-600",
       bgGradient: "from-cream-50 to-warm-brown-50",
-      hoverGradient: "from-warm-brown-600 to-warm-brown-700"
+      hoverGradient: "from-warm-brown-600 to-warm-brown-700",
+      tokenType: "resume" as const
     },
     {
       icon: PenTool,
@@ -35,7 +36,8 @@ const Index = () => {
       href: "/cover-letter",
       gradient: "from-warm-brown-600 to-warm-brown-700",
       bgGradient: "from-warm-brown-50 to-cream-100",
-      hoverGradient: "from-warm-brown-700 to-warm-brown-800"
+      hoverGradient: "from-warm-brown-700 to-warm-brown-800",
+      tokenType: "coverLetter" as const
     },
     {
       icon: MessageSquare,
@@ -44,7 +46,8 @@ const Index = () => {
       href: "/interview",
       gradient: "from-warm-brown-700 to-warm-brown-800",
       bgGradient: "from-cream-100 to-warm-brown-100",
-      hoverGradient: "from-warm-brown-800 to-warm-brown-700"
+      hoverGradient: "from-warm-brown-800 to-warm-brown-700",
+      tokenType: "interview" as const
     }
   ];
 
@@ -134,6 +137,25 @@ const Index = () => {
       review: "I've tried many career tools, but CareerBoost AI is by far the best. The AI really understands what recruiters are looking for."
     }
   ];
+
+  const getTokenCount = (tokenType: string) => {
+    switch (tokenType) {
+      case 'resume': return tokens.resume;
+      case 'coverLetter': return tokens.coverLetter;
+      case 'interview': return tokens.interview;
+      default: return 0;
+    }
+  };
+
+  const getTotalTokens = (tokenType: string) => {
+    // Free users get these amounts initially
+    switch (tokenType) {
+      case 'resume': return 3;
+      case 'coverLetter': return 3;
+      case 'interview': return 5;
+      default: return 0;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-cream-50">
@@ -265,13 +287,23 @@ const Index = () => {
                   <CardTitle className="text-xl font-bold text-warm-brown-800 mb-3">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center relative z-10">
-                  <CardDescription className="text-warm-brown-600 mb-8 leading-relaxed">
+                  <CardDescription className="text-warm-brown-600 mb-6 leading-relaxed">
                     {feature.description}
                   </CardDescription>
+                  
+                  {user && (
+                    <div className="mb-4 p-3 bg-white/60 rounded-lg border border-warm-brown-200/50">
+                      <div className="text-sm text-warm-brown-600 mb-1">Available Tokens</div>
+                      <div className="text-lg font-bold text-warm-brown-800">
+                        {getTokenCount(feature.tokenType)}/{getTotalTokens(feature.tokenType)}
+                      </div>
+                    </div>
+                  )}
+                  
                   {user ? (
                     <Link to={feature.href}>
                       <Button className={`w-full bg-gradient-to-r ${feature.gradient} hover:bg-gradient-to-r hover:${feature.hoverGradient} hover:shadow-lg transition-all duration-300 text-white font-semibold py-3`}>
-                        Try Now <ChevronRight className="ml-2 h-4 w-4" />
+                        Generate AI <ChevronRight className="ml-2 h-4 w-4" />
                       </Button>
                     </Link>
                   ) : (

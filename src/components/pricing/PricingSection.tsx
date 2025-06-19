@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, Star, Zap, Crown } from "lucide-react";
+import { useState } from "react";
 
 interface PricingTier {
   name: string;
@@ -50,6 +51,8 @@ const pricingTiers: PricingTier[] = [
 ];
 
 export const PricingSection = () => {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
   return (
     <section className="py-24 bg-gradient-to-br from-cream-50 to-warm-brown-50 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-white/30"></div>
@@ -89,7 +92,17 @@ export const PricingSection = () => {
           {pricingTiers.map((tier, index) => (
             <Card 
               key={index} 
-              className={`relative hover:shadow-2xl transition-all duration-500 border-0 bg-gradient-to-br ${tier.bgGradient} hover:scale-105 overflow-hidden backdrop-blur-sm border border-warm-brown-200/50 ${tier.popular ? 'ring-2 ring-warm-brown-400 scale-105' : ''}`}
+              className={`relative transition-all duration-500 border-0 bg-gradient-to-br ${tier.bgGradient} overflow-hidden backdrop-blur-sm border border-warm-brown-200/50 cursor-pointer ${
+                tier.popular ? 'ring-2 ring-warm-brown-400' : ''
+              } ${
+                hoveredIndex === null 
+                  ? 'hover:shadow-2xl hover:scale-105' 
+                  : hoveredIndex === index 
+                    ? 'shadow-2xl scale-110 z-20' 
+                    : 'blur-sm scale-95 opacity-70'
+              }`}
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
             >
               {tier.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
