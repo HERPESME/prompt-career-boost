@@ -435,7 +435,7 @@ const Index = () => {
       <PricingSection />
 
       {/* Benefits Section */}
-      <section className="py-24 bg-gradient-to-r from-warm-brown-800 via-warm-brown-700 to-warm-brown-600 text-white relative overflow-hidden">
+      <section className="py-24 bg-gradient-to-r from-warm-brown-800 via-warm-brown-700 to-warm-brown-600 text-white relative overflow-hidden mb-16">
         <div className="absolute inset-0 bg-gradient-to-br from-warm-brown-600/10 to-warm-brown-800/10"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
