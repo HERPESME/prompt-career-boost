@@ -9,8 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { FileText, Sparkles, Save, Download, RefreshCw } from "lucide-react";
+import { useSecureTokens } from "@/hooks/useSecureTokens";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 export const CoverLetterBuilder = () => {
+  const { user } = useAuthUser();
+  const { useToken } = useSecureTokens();
   const [formData, setFormData] = useState({
     title: "",
     companyName: "",
@@ -23,14 +27,15 @@ export const CoverLetterBuilder = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchResumes();
-  }, []);
+    if (user) {
+      fetchResumes();
+    }
+  }, [user]);
 
   const fetchResumes = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+    if (!user) return;
 
+    try {
       const { data, error } = await supabase
         .from("resumes")
         .select("id, title")
@@ -41,10 +46,24 @@ export const CoverLetterBuilder = () => {
       setResumes(data || []);
     } catch (error: any) {
       console.error("Error fetching resumes:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load your resumes.",
+        variant: "destructive",
+      });
     }
   };
 
   const generateCoverLetter = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to generate cover letters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!formData.companyName || !formData.position) {
       toast({
         title: "Missing Information",
@@ -52,6 +71,12 @@ export const CoverLetterBuilder = () => {
         variant: "destructive",
       });
       return;
+    }
+
+    // Check and consume token securely
+    const canUseToken = await useToken('cover-letter');
+    if (!canUseToken) {
+      return; // Token modal will be shown
     }
 
     setLoading(true);
@@ -62,6 +87,7 @@ export const CoverLetterBuilder = () => {
           .from("resumes")
           .select("content")
           .eq("id", formData.resumeId)
+          .eq("user_id", user.id) // Additional security check
           .single();
         resumeContent = resumeData?.content;
       }
@@ -96,6 +122,15 @@ export const CoverLetterBuilder = () => {
   };
 
   const saveCoverLetter = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to save cover letters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!formData.title.trim() || !coverLetterContent.trim()) {
       toast({
         title: "Missing Information",
@@ -106,9 +141,6 @@ export const CoverLetterBuilder = () => {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
       const { error } = await supabase
         .from("cover_letters")
         .insert({
@@ -128,13 +160,29 @@ export const CoverLetterBuilder = () => {
         description: "Your cover letter has been saved successfully.",
       });
     } catch (error: any) {
+      console.error("Save error:", error);
       toast({
         title: "Save Failed",
-        description: error.message,
+        description: "Failed to save cover letter. Please try again.",
         variant: "destructive",
       });
     }
   };
+
+  if (!user) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="text-center py-12">
+          <h1 className="text-3xl font-bold text-warm-brown-800 mb-4">
+            AI Cover Letter Writer
+          </h1>
+          <p className="text-warm-brown-600 mb-8">
+            Please sign in to access the cover letter generator.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">

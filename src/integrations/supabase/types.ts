@@ -179,6 +179,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_tokens: {
+        Row: {
+          cover_letter_tokens: number
+          created_at: string | null
+          id: string
+          interview_tokens: number
+          resume_tokens: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cover_letter_tokens?: number
+          created_at?: string | null
+          id?: string
+          interview_tokens?: number
+          resume_tokens?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cover_letter_tokens?: number
+          created_at?: string | null
+          id?: string
+          interview_tokens?: number
+          resume_tokens?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
