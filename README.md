@@ -201,3 +201,5 @@ If you encounter any issues or have questions:
 **Built with ❤️ for career success**
 
 Transform your career journey with AI-powered tools designed to help you land your dream job.
+
+Made by - Eeshan Singh Pokharia, Aspiring SDE and Full Stack Developer
