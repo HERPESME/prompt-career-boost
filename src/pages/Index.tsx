@@ -9,14 +9,12 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PricingSection } from "@/components/pricing/PricingSection";
 import { TokenModal } from "@/components/pricing/TokenModal";
-import { useTokens } from "@/hooks/useTokens";
+import { useSecureTokens } from "@/hooks/useSecureTokens";
 
 const Index = () => {
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"signin" | "signup">("signup");
   const { user } = useAuthUser();
   const featuresRef = useRef<HTMLDivElement>(null);
-  const { isTokenModalOpen, currentTokenType, closeTokenModal, tokens } = useTokens();
+  const { isTokenModalOpen, currentTokenType, closeTokenModal, tokens } = useSecureTokens();
 
   const features = [
     {
@@ -140,9 +138,9 @@ const Index = () => {
 
   const getTokenCount = (tokenType: string) => {
     switch (tokenType) {
-      case 'resume': return tokens.resume;
-      case 'coverLetter': return tokens.coverLetter;
-      case 'interview': return tokens.interview;
+      case 'resume': return tokens.resume_tokens;
+      case 'coverLetter': return tokens.cover_letter_tokens;
+      case 'interview': return tokens.interview_tokens;
       default: return 0;
     }
   };
@@ -196,13 +194,11 @@ const Index = () => {
                   </Button>
                 </Link>
               ) : (
-                <Button 
-                  size="lg" 
-                  onClick={() => { setAuthMode("signup"); setIsAuthOpen(true); }}
-                  className="bg-white text-warm-brown-800 hover:bg-cream-100 px-10 py-6 text-lg font-semibold shadow-2xl hover:shadow-warm-brown-500/25 transition-all duration-300 hover:scale-105 border-2 border-cream-200/50"
-                >
-                  Start Free Today <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
+                <AuthDialog>
+                  <Button size="lg" className="bg-white text-warm-brown-800 hover:bg-cream-100 px-10 py-6 text-lg font-semibold shadow-2xl hover:shadow-warm-brown-500/25 transition-all duration-300 hover:scale-105 border-2 border-cream-200/50">
+                    Start Free Today <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </AuthDialog>
               )}
               <Button 
                 variant="outline" 
@@ -307,12 +303,11 @@ const Index = () => {
                       </Button>
                     </Link>
                   ) : (
-                    <Button 
-                      onClick={() => { setAuthMode("signup"); setIsAuthOpen(true); }}
-                      className={`w-full bg-gradient-to-r ${feature.gradient} hover:bg-gradient-to-r hover:${feature.hoverGradient} hover:shadow-lg transition-all duration-300 text-white font-semibold py-3`}
-                    >
-                      Get Started <ChevronRight className="ml-2 h-4 w-4" />
-                    </Button>
+                    <AuthDialog>
+                      <Button className={`w-full bg-gradient-to-r ${feature.gradient} hover:bg-gradient-to-r hover:${feature.hoverGradient} hover:shadow-lg transition-all duration-300 text-white font-semibold py-3`}>
+                        Get Started <ChevronRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </AuthDialog>
                   )}
                 </CardContent>
               </Card>
@@ -447,13 +442,11 @@ const Index = () => {
                 Join thousands of professionals who have successfully transformed their careers with our cutting-edge AI technology.
               </p>
               {!user && (
-                <Button 
-                  size="lg"
-                  onClick={() => { setAuthMode("signup"); setIsAuthOpen(true); }}
-                  className="bg-white text-warm-brown-800 hover:bg-cream-100 px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 shadow-xl border-2 border-cream-200/50"
-                >
-                  Start Your Journey <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
+                <AuthDialog>
+                  <Button size="lg" className="bg-white text-warm-brown-800 hover:bg-cream-100 px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 shadow-xl border-2 border-cream-200/50">
+                    Start Your Journey <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </AuthDialog>
               )}
             </div>
             
@@ -473,21 +466,14 @@ const Index = () => {
 
       <Footer />
 
-      <AuthDialog
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        mode={authMode}
-        onModeChange={setAuthMode}
-      />
-
       <TokenModal
         isOpen={isTokenModalOpen}
         onClose={closeTokenModal}
         tokenType={currentTokenType}
         remainingTokens={
-          currentTokenType === 'resume' ? tokens.resume :
-          currentTokenType === 'cover-letter' ? tokens.coverLetter :
-          tokens.interview
+          currentTokenType === 'resume' ? tokens.resume_tokens :
+          currentTokenType === 'cover-letter' ? tokens.cover_letter_tokens :
+          tokens.interview_tokens
         }
       />
     </div>

@@ -4,19 +4,15 @@ import { Separator } from "@/components/ui/separator";
 import { Mail, Phone, MapPin, Github, Twitter, Linkedin, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { useState } from "react";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 
 export const Footer = () => {
   const { user } = useAuthUser();
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
 
   const handleProtectedLink = (e: React.MouseEvent) => {
     if (!user) {
       e.preventDefault();
-      setAuthMode("signin");
-      setIsAuthOpen(true);
+      // The AuthDialog will handle opening when the button is clicked
     }
   };
 
@@ -57,12 +53,11 @@ export const Footer = () => {
                       Resume Builder
                     </Link>
                   ) : (
-                    <button 
-                      onClick={handleProtectedLink}
-                      className="text-cream-100 hover:text-white transition-colors duration-200 text-left"
-                    >
-                      Resume Builder
-                    </button>
+                    <AuthDialog>
+                      <button className="text-cream-100 hover:text-white transition-colors duration-200 text-left">
+                        Resume Builder
+                      </button>
+                    </AuthDialog>
                   )}
                 </li>
                 <li>
@@ -71,12 +66,11 @@ export const Footer = () => {
                       Cover Letter Generator
                     </Link>
                   ) : (
-                    <button 
-                      onClick={handleProtectedLink}
-                      className="text-cream-100 hover:text-white transition-colors duration-200 text-left"
-                    >
-                      Cover Letter Generator
-                    </button>
+                    <AuthDialog>
+                      <button className="text-cream-100 hover:text-white transition-colors duration-200 text-left">
+                        Cover Letter Generator
+                      </button>
+                    </AuthDialog>
                   )}
                 </li>
                 <li>
@@ -85,12 +79,11 @@ export const Footer = () => {
                       Interview Coach
                     </Link>
                   ) : (
-                    <button 
-                      onClick={handleProtectedLink}
-                      className="text-cream-100 hover:text-white transition-colors duration-200 text-left"
-                    >
-                      Interview Coach
-                    </button>
+                    <AuthDialog>
+                      <button className="text-cream-100 hover:text-white transition-colors duration-200 text-left">
+                        Interview Coach
+                      </button>
+                    </AuthDialog>
                   )}
                 </li>
                 <li>
@@ -157,13 +150,6 @@ export const Footer = () => {
           </div>
         </div>
       </footer>
-
-      <AuthDialog
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        mode={authMode}
-        onModeChange={setAuthMode}
-      />
     </>
   );
 };
