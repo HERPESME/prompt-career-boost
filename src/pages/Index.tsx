@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -138,9 +139,9 @@ const Index = () => {
 
   const getTokenCount = (tokenType: string) => {
     switch (tokenType) {
-      case 'resume': return tokens.resume_tokens;
-      case 'coverLetter': return tokens.cover_letter_tokens;
-      case 'interview': return tokens.interview_tokens;
+      case 'resume': return tokens.resume;
+      case 'coverLetter': return tokens.coverLetter;
+      case 'interview': return tokens.interview;
       default: return 0;
     }
   };
@@ -471,9 +472,9 @@ const Index = () => {
         onClose={closeTokenModal}
         tokenType={currentTokenType}
         remainingTokens={
-          currentTokenType === 'resume' ? tokens.resume_tokens :
-          currentTokenType === 'cover-letter' ? tokens.cover_letter_tokens :
-          tokens.interview_tokens
+          currentTokenType === 'resume' ? tokens.resume :
+          currentTokenType === 'cover-letter' ? tokens.coverLetter :
+          tokens.interview
         }
       />
     </div>
