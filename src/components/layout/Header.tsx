@@ -6,7 +6,7 @@ import { SecureTokenDisplay } from "@/components/pricing/SecureTokenDisplay";
 import { SecureTokenModal } from "@/components/pricing/SecureTokenModal";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { LogOut, Settings, User, Menu, X } from "lucide-react";
+import { LogOut, Settings, User, Menu, X, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
@@ -39,19 +39,17 @@ export const Header = () => {
             {/* Logo Section */}
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="relative">
-                <img 
-                  src="/lovable-uploads/c44d97a5-c9ae-446f-8c2a-e54360bc2e8c.png" 
-                  alt="CareerBoost AI" 
-                  className="h-10 w-10 transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-warm-brown-400/20 to-warm-brown-600/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="w-10 h-10 bg-gradient-to-br from-warm-brown-600 via-warm-brown-700 to-warm-brown-800 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300 border-2 border-warm-brown-300/50">
+                  <Sparkles className="h-6 w-6 text-white animate-pulse" />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-warm-brown-400/20 to-warm-brown-600/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-warm-brown-600 via-warm-brown-700 to-warm-brown-800 bg-clip-text text-transparent">
                 CareerBoost AI
               </span>
             </Link>
             
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation - Show all links for everyone */}
             <nav className="hidden lg:flex items-center space-x-8">
               {navigationLinks.map((link) => (
                 <Link 
@@ -127,7 +125,7 @@ export const Header = () => {
             </div>
           </div>
 
-          {/* Mobile Navigation */}
+          {/* Mobile Navigation - Show all links for everyone */}
           {isMobileMenuOpen && (
             <div className="lg:hidden mt-4 pb-4 border-t border-warm-brown-200 animate-fade-in">
               <nav className="flex flex-col space-y-2 mt-4">
