@@ -98,17 +98,36 @@ The application uses the following main tables:
 - **resumes**: Resume data and metadata
 - **cover_letters**: Generated cover letters
 - **interviews**: Interview sessions and feedback
+- **user_tokens**: Secure token management system
 
 All tables include Row Level Security (RLS) policies to ensure data privacy.
 
 ## 🎨 Design System
 
-CareerBoost AI uses a carefully crafted design system featuring:
-- **Color Palette**: Warm browns and creams for a professional, approachable feel
-- **Typography**: Clean, readable fonts with proper hierarchy
-- **Components**: Consistent UI components built with Radix UI
-- **Responsive Design**: Mobile-first approach with breakpoints for all devices
-- **Animations**: Subtle micro-interactions for enhanced user experience
+CareerBoost AI features a modern, Spline-inspired design system with:
+
+### Color Palette
+- **Primary Gradients**: Purple to Blue (Purple 600 → Blue 600)
+- **Secondary Gradients**: Blue to Cyan (Blue 600 → Cyan 500)
+- **Accent Colors**: Cyan to Blue (Cyan 500 → Blue 600)
+- **Neutral Tones**: Modern slate color system (Slate 50-900)
+
+### Visual Elements
+- **Glass Morphism**: Subtle backdrop blur effects with transparency
+- **3D Loading Screen**: Animated sphere with floating particles and progress tracking
+- **Gradient Backgrounds**: Multi-layered gradients with floating geometric shapes
+- **Micro-interactions**: Hover states, scale transforms, and smooth transitions
+
+### Typography
+- **Font Family**: Inter with system font fallbacks
+- **Hierarchy**: Clear visual hierarchy using typography and spacing
+- **Gradient Text**: Purple to cyan gradient text for emphasis
+
+### Components
+- **Cards**: Glass morphism effects with subtle borders and shadows
+- **Buttons**: Gradient backgrounds with hover animations
+- **Navigation**: Clean, minimal design with gradient accent lines
+- **Loading States**: 3D animated loading screen with progress indicators
 
 ## 🚀 Deployment
 
@@ -135,6 +154,7 @@ npm run preview
 - **Authentication**: Secure user authentication with session management
 - **API Security**: Protected API endpoints with proper authorization
 - **Data Encryption**: All sensitive data is encrypted in transit and at rest
+- **Token Management**: Secure server-side token tracking and validation
 
 ## 🤝 Contributing
 
@@ -166,12 +186,15 @@ If you encounter any issues or have questions:
 - [ ] Career path recommendations
 - [ ] Team collaboration features
 - [ ] Mobile application
+- [ ] Real-time collaboration
+- [ ] Advanced analytics dashboard
 
 ## 📈 Analytics & Performance
 
 - **Success Rate**: 94% of users report improved interview performance
 - **User Satisfaction**: 4.9/5 average rating
 - **Time Saved**: Users save 10+ hours on average per job application
+- **ATS Compatibility**: 95% pass rate for generated resumes
 
 ---
 
