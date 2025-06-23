@@ -1,5 +1,3 @@
-Hello Folks,
-
 # CareerBoost AI
 
 **AI-Powered Career Tools for Landing Your Dream Job**
