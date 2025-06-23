@@ -27,15 +27,15 @@ export const TokenDisplay = () => {
   ];
 
   return (
-    <div className="flex items-center gap-4 p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-warm-brown-200">
-      <div className="flex items-center gap-1 text-warm-brown-700">
+    <div className="flex items-center gap-4 p-3 bg-white/90 backdrop-blur-sm rounded-lg border border-slate-200 shadow-sm">
+      <div className="flex items-center gap-1 text-slate-700">
         <Zap className="h-4 w-4" />
         <span className="text-sm font-medium">Tokens:</span>
       </div>
       {tokenInfo.map((token, index) => (
         <div key={index} className="flex items-center gap-1">
           <token.icon className={`h-4 w-4 ${token.color}`} />
-          <span className={`text-sm font-semibold ${token.count === 0 ? 'text-red-500' : 'text-warm-brown-800'}`}>
+          <span className={`text-sm font-semibold ${token.count === 0 ? 'text-red-500' : 'text-slate-800'}`}>
             {token.count}
           </span>
         </div>
