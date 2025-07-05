@@ -1,8 +1,21 @@
-import { Zap, FileText, PenTool, MessageSquare, Loader2 } from "lucide-react";
+
+import { Zap, FileText, PenTool, MessageSquare, Loader2, AlertCircle } from "lucide-react";
 import { useSecureTokens } from "@/hooks/useSecureTokens";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 export const SecureTokenDisplay = () => {
   const { tokens, loading } = useSecureTokens();
+  const { user, loading: authLoading } = useAuthUser();
+
+  // Don't show anything if auth is still loading
+  if (authLoading) {
+    return null;
+  }
+
+  // Don't show token display if user is not authenticated
+  if (!user) {
+    return null;
+  }
 
   if (loading) {
     return (
