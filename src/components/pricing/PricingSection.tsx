@@ -23,8 +23,8 @@ const pricingTiers: PricingTier[] = [
     coverLetterTokens: 15,
     interviewTokens: 20,
     icon: Zap,
-    gradient: "from-purple-500 to-purple-600",
-    bgGradient: "from-slate-50 to-purple-50"
+    gradient: "from-purple-600 to-purple-700",
+    bgGradient: "from-background to-purple-50"
   },
   {
     name: "Standard", 
@@ -34,8 +34,8 @@ const pricingTiers: PricingTier[] = [
     interviewTokens: 30,
     popular: true,
     icon: Star,
-    gradient: "from-blue-600 to-cyan-500",
-    bgGradient: "from-blue-50 to-cyan-50"
+    gradient: "from-blue-600 to-cyan-600",
+    bgGradient: "from-background to-blue-50"
   },
   {
     name: "Value Pack",
@@ -44,8 +44,8 @@ const pricingTiers: PricingTier[] = [
     coverLetterTokens: 80,
     interviewTokens: 200,
     icon: Crown,
-    gradient: "from-cyan-500 to-blue-600",
-    bgGradient: "from-cyan-50 to-blue-50"
+    gradient: "from-cyan-600 to-blue-600",
+    bgGradient: "from-background to-cyan-50"
   }
 ];
 

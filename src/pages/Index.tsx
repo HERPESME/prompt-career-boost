@@ -23,7 +23,7 @@ const Index = () => {
       description: "Create ATS-optimized resumes tailored to specific job descriptions with AI assistance.",
       href: "/resume",
       gradient: "from-purple-600 to-purple-700",
-      bgGradient: "from-slate-50 to-purple-50",
+      bgGradient: "from-background to-purple-50",
       hoverGradient: "from-purple-700 to-purple-800",
       tokenType: "resume" as const
     },
@@ -32,9 +32,9 @@ const Index = () => {
       title: "Cover Letter Generator",
       description: "Generate personalized cover letters that highlight your strengths and match company culture.",
       href: "/cover-letter",
-      gradient: "from-blue-600 to-cyan-500",
-      bgGradient: "from-blue-50 to-cyan-50",
-      hoverGradient: "from-blue-700 to-cyan-600",
+      gradient: "from-blue-600 to-cyan-600",
+      bgGradient: "from-background to-blue-50",
+      hoverGradient: "from-blue-700 to-cyan-700",
       tokenType: "coverLetter" as const
     },
     {
@@ -42,9 +42,9 @@ const Index = () => {
       title: "Interview Coach",
       description: "Practice with AI-powered mock interviews and get detailed feedback to improve your performance.",
       href: "/interview",
-      gradient: "from-cyan-500 to-blue-600",
-      bgGradient: "from-cyan-50 to-blue-50",
-      hoverGradient: "from-cyan-600 to-blue-700",
+      gradient: "from-cyan-600 to-blue-600",
+      bgGradient: "from-background to-cyan-50",
+      hoverGradient: "from-cyan-700 to-blue-700",
       tokenType: "interview" as const
     }
   ];
@@ -189,13 +189,13 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in animation-delay-1000">
               {user ? (
                 <Link to="/resume">
-                  <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-10 py-6 text-lg font-semibold shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 hover:scale-105 border-0">
+                  <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-primary-foreground px-10 py-6 text-lg font-semibold shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 hover:scale-105 border-0">
                     Get Started Now <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
               ) : (
                 <AuthDialog>
-                  <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-10 py-6 text-lg font-semibold shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 hover:scale-105 border-0">
+                  <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-primary-foreground px-10 py-6 text-lg font-semibold shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 hover:scale-105 border-0">
                     Start Free Today <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </AuthDialog>
@@ -203,7 +203,7 @@ const Index = () => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="px-10 py-6 text-lg border-2 border-white/50 text-white hover:bg-white/20 glass-effect transition-all duration-300 hover:scale-105 group shadow-lg hover:shadow-white/10"
+                className="px-10 py-6 text-lg border-2 border-white/50 text-primary-foreground hover:bg-white/20 glass-effect transition-all duration-300 hover:scale-105 group shadow-lg hover:shadow-white/10"
                 onClick={() => {
                   document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth' });
                 }}

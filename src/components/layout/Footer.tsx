@@ -18,26 +18,26 @@ export const Footer = () => {
 
   return (
     <>
-      <footer className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white">
+      <footer className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-primary-foreground">
         <div className="container mx-auto px-4 py-8">
           {/* Main Footer Content */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {/* Company Info */}
             <div className="space-y-3">
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-lg font-bold text-primary-foreground">
                 CareerBoost AI
               </h3>
               <p className="text-slate-300 leading-relaxed text-sm">
                 Empowering professionals to advance their careers with AI-powered tools for resumes, cover letters, and interview preparation.
               </p>
               <div className="flex space-x-3">
-                <Button variant="ghost" size="icon" className="text-slate-300 hover:bg-slate-700 hover:text-white h-8 w-8 transition-colors">
+                <Button variant="ghost" size="icon" className="text-slate-300 hover:bg-slate-700 hover:text-primary-foreground h-8 w-8 transition-colors">
                   <Github className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="text-slate-300 hover:bg-slate-700 hover:text-white h-8 w-8 transition-colors">
+                <Button variant="ghost" size="icon" className="text-slate-300 hover:bg-slate-700 hover:text-primary-foreground h-8 w-8 transition-colors">
                   <Twitter className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="text-slate-300 hover:bg-slate-700 hover:text-white h-8 w-8 transition-colors">
+                <Button variant="ghost" size="icon" className="text-slate-300 hover:bg-slate-700 hover:text-primary-foreground h-8 w-8 transition-colors">
                   <Linkedin className="h-4 w-4" />
                 </Button>
               </div>
@@ -45,7 +45,7 @@ export const Footer = () => {
 
             {/* Quick Links */}
             <div className="space-y-3">
-              <h4 className="text-md font-semibold text-white">Quick Links</h4>
+              <h4 className="text-md font-semibold text-primary-foreground">Quick Links</h4>
               <ul className="space-y-1 text-sm">
                 <li>
                   {user ? (
@@ -96,7 +96,7 @@ export const Footer = () => {
 
             {/* Contact & Newsletter */}
             <div className="space-y-3">
-              <h4 className="text-md font-semibold text-white">Stay Connected</h4>
+              <h4 className="text-md font-semibold text-primary-foreground">Stay Connected</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center space-x-2">
                   <Mail className="h-3 w-3 text-slate-400" />
