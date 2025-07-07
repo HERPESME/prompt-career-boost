@@ -92,33 +92,23 @@ export const CoverLetterBuilder = () => {
         resumeContent = resumeData?.content;
       }
 
-      // Generate professional cover letter template
-      const coverLetterTemplate = `Dear Hiring Manager,
+      // Use AI service for intelligent cover letter generation
+      const response = await supabase.functions.invoke('ai-chat', {
+        body: {
+          prompt: `Create a professional cover letter for:
+- Position: ${formData.position}
+- Company: ${formData.companyName}
+- Job Description: ${formData.jobDescription || 'Not provided'}
+${resumeContent ? `- Candidate Background: ${JSON.stringify(resumeContent)}` : ''}
 
-I am writing to express my strong interest in the ${formData.position} position at ${formData.companyName}. With my passion for innovation and proven track record of success, I am excited about the opportunity to contribute to your team.
+Make it personalized, professional, and compelling.`,
+          type: 'cover-letter'
+        },
+      });
 
-${formData.jobDescription ? 
-  `Based on the job requirements, I believe my skills align perfectly with your needs. ` : 
-  'My experience and skills make me an ideal candidate for this role. '
-}
+      if (response.error) throw response.error;
 
-Key qualifications I bring:
-• Strong technical and analytical skills
-• Excellent communication and teamwork abilities  
-• Proven problem-solving capabilities
-• Dedication to continuous learning and improvement
-
-${resumeContent ? 
-  'As detailed in my attached resume, my experience demonstrates my ability to deliver results and add value to any organization.' :
-  'I am eager to discuss how my background and enthusiasm can contribute to your team\'s success.'
-}
-
-Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to ${formData.companyName}'s continued success.
-
-Sincerely,
-[Your Name]`;
-
-      setCoverLetterContent(coverLetterTemplate);
+      setCoverLetterContent(response.data.result);
       
       toast({
         title: "Cover Letter Generated!",
