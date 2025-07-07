@@ -1,8 +1,8 @@
 
-import { ApiKeySettings } from "@/components/settings/ApiKeySettings";
+import { HuggingFaceSettings } from "@/components/settings/HuggingFaceSettings";
 
 const SettingsPage = () => {
-  return <ApiKeySettings />;
+  return <HuggingFaceSettings />;
 };
 
 export default SettingsPage;
