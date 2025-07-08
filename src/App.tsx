@@ -11,6 +11,7 @@ import CoverLetterPage from "./pages/CoverLetterPage";
 import InterviewPage from "./pages/InterviewPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -33,10 +34,26 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/resume" element={<ResumePage />} />
-            <Route path="/cover-letter" element={<CoverLetterPage />} />
-            <Route path="/interview" element={<InterviewPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/resume" element={
+              <ProtectedRoute>
+                <ResumePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/cover-letter" element={
+              <ProtectedRoute>
+                <CoverLetterPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/interview" element={
+              <ProtectedRoute>
+                <InterviewPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

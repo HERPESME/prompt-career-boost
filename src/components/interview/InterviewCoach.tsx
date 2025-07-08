@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useSecureTokens } from "@/hooks/useSecureTokens";
+import { useAI } from "@/hooks/useAI";
 import { MessageSquare, Play, Pause, RotateCcw, Save, Target, Clock, Award } from "lucide-react";
 
 interface Question {
@@ -25,7 +27,68 @@ interface Response {
   score: number;
 }
 
+// Intelligent fallback scoring function
+const generateIntelligentFeedback = (answer: string, question: Question, interviewData: any) => {
+  const answerLength = answer.trim().split(' ').length;
+  const lowerAnswer = answer.toLowerCase();
+  
+  let score = 60; // Base score
+  let feedback = "Thank you for your response. ";
+  
+  // Length scoring
+  if (answerLength >= 50) {
+    score += 20;
+    feedback += "Your answer was comprehensive and detailed. ";
+  } else if (answerLength >= 25) {
+    score += 10;
+    feedback += "Good level of detail in your response. ";
+  } else {
+    score -= 10;
+    feedback += "Consider providing more detail and specific examples. ";
+  }
+  
+  // STAR method detection
+  const starKeywords = ['situation', 'task', 'action', 'result', 'challenge', 'problem', 'solution', 'outcome'];
+  const foundStarKeywords = starKeywords.filter(keyword => lowerAnswer.includes(keyword));
+  score += foundStarKeywords.length * 5;
+  
+  if (foundStarKeywords.length >= 2) {
+    feedback += "Great use of structured examples (STAR method). ";
+  }
+  
+  // Professional keywords
+  const professionalKeywords = ['experience', 'skills', 'project', 'team', 'leadership', 'collaboration', 'achievement'];
+  const foundProfessional = professionalKeywords.filter(keyword => lowerAnswer.includes(keyword));
+  score += foundProfessional.length * 3;
+  
+  // Question-specific adjustments
+  if (question.type === 'behavioral' && foundStarKeywords.length > 0) {
+    score += 10;
+    feedback += "Excellent behavioral response with specific examples. ";
+  }
+  
+  if (question.type === 'technical' && (lowerAnswer.includes('technology') || lowerAnswer.includes('tool') || lowerAnswer.includes('framework'))) {
+    score += 8;
+    feedback += "Good technical insight. ";
+  }
+  
+  // Confidence and clarity indicators
+  if (answer.includes('I') && !lowerAnswer.includes('um') && !lowerAnswer.includes('uh')) {
+    score += 5;
+    feedback += "Clear and confident communication. ";
+  }
+  
+  feedback += "Keep practicing to improve your interview skills!";
+  
+  return {
+    score: Math.min(95, Math.max(30, score)),
+    feedback: feedback
+  };
+};
+
 export const InterviewCoach = () => {
+  const { useToken } = useSecureTokens();
+  const { generateAIResponse, loading: aiLoading } = useAI();
   const [interviewData, setInterviewData] = useState({
     title: "",
     companyName: "",
@@ -135,46 +198,72 @@ export const InterviewCoach = () => {
       return;
     }
 
+    // Check and consume token
+    const canUseToken = await useToken('interview');
+    if (!canUseToken) {
+      return; // Token modal will be shown
+    }
+
     setLoading(true);
     try {
       const currentQuestion = questions[currentQuestionIndex];
       
-      // Generate simple feedback based on answer length and keywords
-      const answerLength = currentAnswer.trim().split(' ').length;
-      let score = 60; // Base score
-      let feedback = "Good response! ";
+      // Generate AI-powered feedback
+      const aiPrompt = `Evaluate this interview answer and provide a score (0-100) and detailed feedback:
+
+QUESTION: ${currentQuestion.question}
+QUESTION TYPE: ${currentQuestion.type}
+DIFFICULTY: ${currentQuestion.difficulty}
+POSITION: ${interviewData.position}
+COMPANY: ${interviewData.companyName || 'Not specified'}
+
+CANDIDATE ANSWER: ${currentAnswer}
+
+Please provide:
+1. A numerical score (0-100) based on:
+   - Relevance to the question
+   - Use of specific examples (STAR method)
+   - Communication clarity
+   - Professional presentation
+   - Depth of insight
+
+2. Constructive feedback including:
+   - What they did well
+   - Areas for improvement
+   - Specific suggestions for better answers
+
+Format: Score: [number] | Feedback: [detailed feedback]`;
+
+      let newResponse: Response;
       
-      // Simple scoring based on answer length
-      if (answerLength >= 50) {
-        score += 20;
-        feedback += "Your answer was detailed and comprehensive. ";
-      } else if (answerLength >= 25) {
-        score += 10;
-        feedback += "Good level of detail in your response. ";
-      } else {
-        feedback += "Consider providing more detail in your answer. ";
+      try {
+        const aiResponse = await generateAIResponse(aiPrompt, 'interview');
+        
+        // Parse AI response
+        const scoreMatch = aiResponse.match(/Score:\s*(\d+)/i);
+        const feedbackMatch = aiResponse.match(/Feedback:\s*(.+)/is);
+        
+        const score = scoreMatch ? Math.min(100, Math.max(0, parseInt(scoreMatch[1]))) : 75;
+        const feedback = feedbackMatch ? feedbackMatch[1].trim() : 'Good effort! Keep practicing to improve your interview skills.';
+        
+        newResponse = {
+          questionId: currentQuestion.id,
+          answer: currentAnswer,
+          feedback: feedback,
+          score: score,
+        };
+      } catch (aiError) {
+        // Fallback to intelligent scoring if AI fails
+        console.log('AI feedback failed, using intelligent fallback');
+        const { score, feedback } = generateIntelligentFeedback(currentAnswer, currentQuestion, interviewData);
+        
+        newResponse = {
+          questionId: currentQuestion.id,
+          answer: currentAnswer,
+          feedback: feedback,
+          score: score,
+        };
       }
-      
-      // Check for specific keywords
-      const keywords = ['experience', 'skills', 'project', 'team', 'challenge', 'solution'];
-      const foundKeywords = keywords.filter(keyword => 
-        currentAnswer.toLowerCase().includes(keyword)
-      );
-      
-      score += foundKeywords.length * 3;
-      
-      if (foundKeywords.length > 2) {
-        feedback += "Great use of relevant examples and experiences. ";
-      }
-      
-      feedback += "Keep practicing to improve your interview skills!";
-      
-      const newResponse: Response = {
-        questionId: currentQuestion.id,
-        answer: currentAnswer,
-        feedback: feedback,
-        score: Math.min(95, score), // Cap at 95%
-      };
 
       const updatedResponses = [...responses, newResponse];
       setResponses(updatedResponses);

@@ -81,6 +81,21 @@ function getSystemPrompt(type: string): string {
 function generateIntelligentResponse(prompt: string, type: string): string {
   const lowerPrompt = prompt.toLowerCase()
   
+  // Enhanced AI-like analysis with keyword detection and context understanding
+  const extractKeywords = (text: string) => {
+    const techKeywords = ['javascript', 'python', 'react', 'node', 'sql', 'aws', 'docker', 'kubernetes', 'git', 'api', 'frontend', 'backend', 'fullstack', 'data', 'analytics', 'machine learning', 'ai', 'cloud', 'microservices'];
+    const softSkills = ['leadership', 'communication', 'teamwork', 'problem solving', 'analytical', 'creative', 'collaborative', 'adaptable'];
+    const industries = ['healthcare', 'finance', 'technology', 'education', 'retail', 'manufacturing', 'consulting', 'startup'];
+    
+    return {
+      tech: techKeywords.filter(keyword => text.includes(keyword)),
+      soft: softSkills.filter(keyword => text.includes(keyword)),
+      industry: industries.filter(keyword => text.includes(keyword))
+    };
+  };
+
+  const keywords = extractKeywords(lowerPrompt);
+  
   switch (type) {
     case 'resume':
       if (lowerPrompt.includes('software') || lowerPrompt.includes('developer') || lowerPrompt.includes('engineer')) {
