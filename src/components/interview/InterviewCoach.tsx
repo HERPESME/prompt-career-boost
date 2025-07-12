@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useSecureTokens } from "@/hooks/useSecureTokens";
 import { useAI } from "@/hooks/useAI";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { MessageSquare, Play, Pause, RotateCcw, Save, Target, Clock, Award } from "lucide-react";
 
 interface Question {
@@ -87,8 +88,10 @@ const generateIntelligentFeedback = (answer: string, question: Question, intervi
 };
 
 export const InterviewCoach = () => {
+  const { user } = useAuthUser();
   const { useToken } = useSecureTokens();
   const { generateAIResponse, loading: aiLoading } = useAI();
+  
   const [interviewData, setInterviewData] = useState({
     title: "",
     companyName: "",
@@ -106,6 +109,15 @@ export const InterviewCoach = () => {
   const [startTime, setStartTime] = useState<Date | null>(null);
 
   const generateQuestions = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to generate interview questions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!interviewData.position) {
       toast({
         title: "Position Required",
@@ -189,6 +201,15 @@ export const InterviewCoach = () => {
   };
 
   const submitAnswer = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to get AI feedback.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!currentAnswer.trim()) {
       toast({
         title: "Answer Required",
@@ -198,7 +219,7 @@ export const InterviewCoach = () => {
       return;
     }
 
-    // Check and consume token
+    // Check and consume token securely
     const canUseToken = await useToken('interview');
     if (!canUseToken) {
       return; // Token modal will be shown
@@ -296,6 +317,15 @@ Format: Score: [number] | Feedback: [detailed feedback]`;
   };
 
   const saveInterview = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to save interviews.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (responses.length === 0) {
       toast({
         title: "No Data to Save",
@@ -306,9 +336,6 @@ Format: Score: [number] | Feedback: [detailed feedback]`;
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
       const duration = startTime ? Math.round((Date.now() - startTime.getTime()) / 60000) : 0;
 
       const { error } = await supabase
@@ -353,6 +380,21 @@ Format: Score: [number] | Feedback: [detailed feedback]`;
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
+
+  if (!user) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="text-center py-12">
+          <h1 className="text-3xl font-bold text-warm-brown-800 mb-4">
+            AI Interview Coach
+          </h1>
+          <p className="text-warm-brown-600 mb-8">
+            Please sign in to access the interview coach.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
@@ -519,10 +561,10 @@ Format: Score: [number] | Feedback: [detailed feedback]`;
 
                     <Button
                       onClick={submitAnswer}
-                      disabled={loading}
+                      disabled={loading || aiLoading}
                       className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
                     >
-                      {loading ? "Evaluating..." : currentQuestionIndex < questions.length - 1 ? "Submit & Next" : "Submit & Finish"}
+                      {loading || aiLoading ? "Evaluating..." : currentQuestionIndex < questions.length - 1 ? "Submit & Next" : "Submit & Finish"}
                     </Button>
                   </div>
                 )}

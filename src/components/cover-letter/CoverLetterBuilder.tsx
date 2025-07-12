@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,10 +10,13 @@ import { toast } from "@/hooks/use-toast";
 import { FileText, Sparkles, Save, Download, RefreshCw } from "lucide-react";
 import { useSecureTokens } from "@/hooks/useSecureTokens";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useAI } from "@/hooks/useAI";
 
 export const CoverLetterBuilder = () => {
   const { user } = useAuthUser();
   const { useToken } = useSecureTokens();
+  const { generateAIResponse, loading: aiLoading } = useAI();
+  
   const [formData, setFormData] = useState({
     title: "",
     companyName: "",
@@ -92,23 +94,17 @@ export const CoverLetterBuilder = () => {
         resumeContent = resumeData?.content;
       }
 
-      // Use AI service for intelligent cover letter generation
-      const response = await supabase.functions.invoke('ai-chat', {
-        body: {
-          prompt: `Create a professional cover letter for:
+      // Create comprehensive prompt for cover letter generation
+      const prompt = `Create a professional cover letter for:
 - Position: ${formData.position}
 - Company: ${formData.companyName}
 - Job Description: ${formData.jobDescription || 'Not provided'}
 ${resumeContent ? `- Candidate Background: ${JSON.stringify(resumeContent)}` : ''}
 
-Make it personalized, professional, and compelling.`,
-          type: 'cover-letter'
-        },
-      });
+Make it personalized, professional, and compelling. Include specific examples that match the job requirements.`;
 
-      if (response.error) throw response.error;
-
-      setCoverLetterContent(response.data.result);
+      const response = await generateAIResponse(prompt, 'cover-letter');
+      setCoverLetterContent(response);
       
       toast({
         title: "Cover Letter Generated!",
@@ -118,7 +114,7 @@ Make it personalized, professional, and compelling.`,
       console.error("AI generation error:", error);
       toast({
         title: "Generation Failed",
-        description: "Please make sure you have configured your OpenAI API key.",
+        description: "Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -273,10 +269,10 @@ Make it personalized, professional, and compelling.`,
 
             <Button
               onClick={generateCoverLetter}
-              disabled={loading}
+              disabled={loading || aiLoading}
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
             >
-              {loading ? (
+              {loading || aiLoading ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                   Generating...
