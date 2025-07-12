@@ -14,8 +14,8 @@ serve(async (req) => {
 
   try {
     const { prompt, type } = await req.json()
+    console.log('AI request received:', { type, promptLength: prompt?.length })
 
-    // Get Gemini API key from Supabase secrets (secure)
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY')
     
     if (!geminiApiKey) {
@@ -27,7 +27,7 @@ serve(async (req) => {
       })
     }
 
-    // Use Gemini API
+    // Use Gemini 1.5 Flash for fast, cost-effective responses
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
@@ -36,20 +36,30 @@ serve(async (req) => {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `${getSystemPrompt(type)}\n\nUser Query: ${prompt}`
+            text: `${getSystemPrompt(type)}\n\nUser Request: ${prompt}`
           }]
         }],
         generationConfig: {
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 1024,
-        }
+          maxOutputTokens: 2048,
+        },
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          }
+        ]
       }),
     })
 
     if (!response.ok) {
-      console.log('Gemini API error, using fallback response')
+      console.log('Gemini API error, status:', response.status)
       return new Response(JSON.stringify({ 
         result: generateIntelligentResponse(prompt, type) 
       }), {
@@ -58,6 +68,8 @@ serve(async (req) => {
     }
 
     const data = await response.json()
+    console.log('Gemini response received successfully')
+    
     const result = data.candidates?.[0]?.content?.parts?.[0]?.text || generateIntelligentResponse(prompt, type)
 
     return new Response(JSON.stringify({ result }), {
@@ -65,27 +77,74 @@ serve(async (req) => {
     })
   } catch (error) {
     console.error('Error in ai-chat function:', error)
-    // Always provide intelligent fallback responses
-    const { prompt, type } = await req.json().catch(() => ({ prompt: '', type: 'general' }))
     
-    return new Response(JSON.stringify({ 
-      result: generateIntelligentResponse(prompt, type) 
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    // Always provide intelligent fallback responses
+    try {
+      const { prompt, type } = await req.json()
+      return new Response(JSON.stringify({ 
+        result: generateIntelligentResponse(prompt, type) 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    } catch (parseError) {
+      return new Response(JSON.stringify({ 
+        result: "I'm here to help with your career development. Please try again with your request." 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
   }
 })
 
 function getSystemPrompt(type: string): string {
   switch (type) {
     case 'resume':
-      return 'You are a professional resume optimization expert. Provide specific, actionable advice to improve resumes for ATS systems and hiring managers. Focus on keywords, formatting, and quantifiable achievements.'
+      return `You are an expert resume optimization specialist with deep knowledge of ATS systems and hiring practices across industries. 
+
+Your expertise includes:
+- ATS optimization and keyword strategy
+- Industry-specific resume formatting
+- Quantifying achievements and impact
+- Modern resume best practices
+- Tailoring content to job descriptions
+
+Provide specific, actionable advice with concrete examples. Focus on measurable improvements and industry standards.`
+
     case 'cover-letter':
-      return 'You are a professional cover letter writer. Create compelling, personalized cover letters that highlight relevant skills and experiences for the specific job and company.'
+      return `You are a professional cover letter writing expert with extensive experience in helping candidates land interviews.
+
+Your expertise includes:
+- Compelling opening hooks and value propositions
+- Company research and personalization strategies
+- Storytelling techniques for career narratives
+- Industry-specific communication styles
+- Call-to-action optimization
+
+Create engaging, personalized content that connects the candidate's experience to the employer's needs.`
+
     case 'interview':
-      return 'You are an experienced interview coach. Provide constructive feedback on interview answers, suggest improvements, and offer practical tips for better performance.'
+      return `You are an experienced interview coach and hiring manager with deep insights into interview best practices.
+
+Your expertise includes:
+- STAR method and behavioral interview techniques
+- Industry-specific interview preparation
+- Confidence building and presentation skills
+- Handling difficult questions and scenarios
+- Post-interview follow-up strategies
+
+Provide constructive feedback with specific improvement suggestions and practical examples.`
+
     default:
-      return 'You are a career development expert. Provide helpful, professional advice for career growth and job search strategies.'
+      return `You are a career development expert and professional coach specializing in job search strategy and career advancement.
+
+Your expertise includes:
+- Career planning and goal setting
+- Professional networking strategies
+- Skill development and learning paths
+- Industry insights and market trends
+- Job search optimization
+
+Provide strategic, actionable guidance to help advance careers and achieve professional goals.`
   }
 }
 
@@ -94,110 +153,289 @@ function generateIntelligentResponse(prompt: string, type: string): string {
   
   switch (type) {
     case 'resume':
-      if (lowerPrompt.includes('software') || lowerPrompt.includes('developer') || lowerPrompt.includes('engineer')) {
-        return `**Resume Optimization for Software Engineering:**
+      if (lowerPrompt.includes('software') || lowerPrompt.includes('developer') || lowerPrompt.includes('engineer') || lowerPrompt.includes('tech')) {
+        return `**Technical Resume Optimization Strategy:**
 
-• **Technical Skills Section**: List programming languages, frameworks, and tools prominently
-• **Quantified Achievements**: Include metrics like "Improved app performance by 40%" or "Reduced load time by 2 seconds"
-• **Project Impact**: Describe how your code solved business problems or improved user experience
-• **ATS Keywords**: Include specific technologies mentioned in job descriptions
-• **Action Verbs**: Use "Architected," "Implemented," "Optimized," "Deployed," "Collaborated"
+**🎯 ATS Optimization:**
+• Include specific programming languages, frameworks, and tools from the job description
+• Use exact keyword matches (e.g., "JavaScript" not "JS")
+• Add technical certifications and relevant education
+• Include industry-standard section headers
 
-**Key Tips:**
-- Lead with your strongest technical accomplishments
-- Show progression in complexity and responsibility
-- Include relevant side projects or open-source contributions
-- Keep technical jargon balanced with business impact`
+**📊 Quantify Your Impact:**
+• "Developed web application serving 10,000+ daily users"
+• "Optimized database queries, reducing load time by 40%"
+• "Led team of 5 developers on $2M project"
+• "Automated testing processes, saving 15 hours/week"
+
+**🏗️ Technical Projects Section:**
+• Highlight your best 3-4 projects with tech stacks
+• Include GitHub links and live demos
+• Focus on problem-solving and business impact
+• Show progression in complexity and responsibility
+
+**💡 Pro Tips:**
+• Lead with your strongest technical achievements
+• Balance technical depth with business value
+• Include relevant side projects and contributions
+• Tailor each application to specific tech stack requirements`
       }
       
-      return `**Professional Resume Enhancement:**
+      if (lowerPrompt.includes('marketing') || lowerPrompt.includes('sales') || lowerPrompt.includes('business')) {
+        return `**Marketing/Business Resume Enhancement:**
 
-• **Summary Statement**: Create a compelling 2-3 line professional summary
-• **Achievement-Focused**: Replace job duties with specific accomplishments and metrics
-• **Keyword Optimization**: Include industry-relevant terms for ATS systems
-• **Skills Balance**: Combine hard skills with relevant soft skills
-• **Consistent Formatting**: Ensure uniform dates, fonts, and bullet points
-• **Quantify Results**: Use numbers, percentages, and concrete outcomes
+**📈 Results-Driven Content:**
+• "Increased lead generation by 150% through targeted campaigns"
+• "Managed $500K annual marketing budget with 25% ROI improvement"
+• "Grew social media following from 1K to 50K in 18 months"
+• "Achieved 120% of quarterly sales targets for 3 consecutive quarters"
 
-**Remember**: Your resume should demonstrate value and impact, not just experience.`
+**🎯 Strategic Skills Highlighting:**
+• Digital marketing tools (HubSpot, Salesforce, Google Analytics)
+• Campaign management and optimization
+• Data analysis and reporting
+• Cross-functional collaboration
+• Customer relationship management
+
+**📊 Campaign & Project Examples:**
+• Multi-channel campaign management
+• Brand positioning and messaging
+• Market research and competitive analysis
+• Customer acquisition and retention strategies
+
+**💼 Professional Impact:**
+Focus on revenue growth, cost savings, market expansion, and team leadership achievements.`
+      }
+      
+      return `**Universal Resume Enhancement Framework:**
+
+**🎯 Professional Summary (3-4 lines):**
+• Start with your years of experience and key expertise
+• Highlight your biggest professional achievement
+• Include 2-3 core skills relevant to target roles
+• End with your career objective or value proposition
+
+**📊 Achievement-Focused Experience:**
+• Replace job duties with specific accomplishments
+• Use action verbs: "Achieved," "Implemented," "Led," "Optimized"
+• Include metrics: percentages, dollar amounts, time savings
+• Show career progression and increasing responsibility
+
+**🛠️ Skills & Keywords:**
+• Include both hard and soft skills relevant to your industry
+• Match keywords from job descriptions
+• Organize by relevance and proficiency level
+• Include certifications and professional development
+
+**📋 Formatting Best Practices:**
+• Use consistent formatting and professional fonts
+• Keep to 1-2 pages depending on experience level
+• Include contact information and LinkedIn profile
+• Ensure ATS compatibility with standard section headers`
 
     case 'cover-letter':
-      return `**Compelling Cover Letter Structure:**
+      if (lowerPrompt.includes('tech') || lowerPrompt.includes('software') || lowerPrompt.includes('developer')) {
+        return `**Technical Cover Letter Template:**
 
-**Opening (Hook):**
-"I am excited to apply for the [Position] at [Company]. Your recent [specific company achievement/mission] aligns perfectly with my experience in [relevant field]."
+**Opening Hook:**
+"As a software engineer passionate about [specific technology/field], I was excited to discover the [Position Title] role at [Company]. Your team's work on [specific project/product] aligns perfectly with my experience in [relevant technology stack]."
 
-**Body (Value Proposition):**
-• Connect your specific achievements to job requirements
-• Share a concrete example demonstrating relevant skills
-• Show genuine knowledge of the company and role
-• Explain your unique value and enthusiasm
+**Technical Value Proposition:**
+• Highlight your most relevant technical achievement
+• Connect your experience to their tech stack
+• Show understanding of their technical challenges
+• Demonstrate problem-solving approach
 
-**Closing (Call to Action):**
-"I would welcome the opportunity to discuss how my [specific skills] can contribute to [Company]'s [specific goal/project]."
+**Example Body Paragraph:**
+"In my previous role at [Company], I developed a [specific application/system] using [technologies] that [specific impact]. This experience directly applies to your need for [job requirement], and I'm excited about the opportunity to contribute to [specific company initiative]."
 
-**Essential Elements:**
-• Personalize for each application
+**Closing with Technical Interest:**
+"I'd welcome the opportunity to discuss how my experience with [specific technologies] and passion for [relevant field] can contribute to [Company]'s continued innovation."
+
+**Tech-Specific Tips:**
+• Reference their GitHub, tech blog, or recent product releases
+• Mention specific technologies from the job posting
+• Include links to your portfolio or relevant projects
+• Show genuine interest in their technical challenges`
+      }
+      
+      return `**Professional Cover Letter Framework:**
+
+**🎯 Compelling Opening (2-3 sentences):**
+"I am excited to apply for the [Position] role at [Company]. Your recent [specific achievement/news] caught my attention, and I believe my [X years] of experience in [relevant field] makes me an ideal candidate to contribute to [specific company goal]."
+
+**💼 Value-Driven Body (2 paragraphs):**
+
+*Paragraph 1: Relevant Experience*
+• Connect your background directly to job requirements
+• Include one specific achievement with measurable results
+• Show understanding of the company's needs and challenges
+
+*Paragraph 2: Cultural Fit & Enthusiasm*
+• Demonstrate knowledge of company values/mission
+• Explain why you're specifically interested in this role
+• Highlight unique qualifications or perspectives you bring
+
+**🎯 Strong Closing:**
+"I would welcome the opportunity to discuss how my experience in [specific area] and passion for [relevant field] can help [Company] achieve [specific goal]. Thank you for your consideration."
+
+**📋 Essential Elements:**
+• Personalize for each company and role
 • Keep concise (3-4 paragraphs maximum)
-• Show cultural fit and genuine interest
-• Include specific examples and achievements`
+• Include specific examples and achievements
+• Show genuine enthusiasm and cultural fit
+• Professional tone with personality showing through`
 
     case 'interview':
       if (lowerPrompt.includes('weakness') || lowerPrompt.includes('weaknesses')) {
-        return `**Addressing Weaknesses Strategically:**
+        return `**Mastering the "Weakness" Question:**
 
-**The Framework:**
-Choose a real weakness that won't disqualify you, then demonstrate active improvement.
+**🎯 The Strategic Framework:**
+1. Choose a real weakness that won't disqualify you
+2. Show self-awareness and commitment to improvement
+3. Demonstrate concrete steps you've taken
+4. Highlight positive outcomes from your growth
 
-**Strong Example:**
-"Earlier in my career, I struggled with delegating tasks because I wanted to ensure quality. This led to burnout and missed deadlines. I've since learned to:
-- Set clear expectations and deadlines
-- Provide detailed briefs and check-in points  
-- Trust team members' capabilities
-- Focus on coaching rather than micromanaging
+**💪 Strong Example Response:**
+"Early in my career, I struggled with delegation because I wanted to ensure everything met my high standards. This led to burnout and bottlenecks for my team.
 
-Now I can manage larger projects more effectively while developing my team."
+I realized this wasn't sustainable, so I:
+• Developed clear project briefs and success criteria
+• Implemented regular check-ins rather than micromanaging
+• Invested time in training team members on my standards
+• Learned to focus on outcomes rather than process
 
-**Why This Works:**
-• Shows self-awareness and growth mindset
-• Demonstrates concrete steps taken
-• Proves positive outcomes
-• Turns weakness into leadership strength`
+Now I successfully manage larger projects while developing my team's capabilities. Last quarter, my team exceeded our goals by 15% while I maintained work-life balance."
+
+**🚫 Avoid These Mistakes:**
+• Fake weaknesses ("I'm too much of a perfectionist")
+• Weaknesses crucial to the role
+• Not showing improvement efforts
+• Being too negative or oversharing
+
+**✅ Good Weakness Categories:**
+• Process improvements (delegation, time management)
+• Communication styles (public speaking, feedback delivery)
+• Technical skills you're actively developing
+• Leadership areas you're growing into`
       }
       
-      return `**Interview Excellence Strategy:**
+      if (lowerPrompt.includes('tell me about yourself') || lowerPrompt.includes('introduce yourself')) {
+        return `**"Tell Me About Yourself" - The Perfect Framework:**
 
-**Pre-Interview Preparation:**
-• Research company mission, values, recent news, and competitors
-• Prepare STAR method examples (Situation, Task, Action, Result)
-• Practice answers aloud, especially for common questions
-• Prepare thoughtful questions about role, team, and company culture
+**🎯 The 3-Part Structure (2-3 minutes):**
 
-**During the Interview:**
-• Show genuine enthusiasm and curiosity
-• Use specific examples to demonstrate skills and achievements
-• Listen actively and build on interviewer's comments
-• Ask insightful questions that show strategic thinking
+**1. Present (30-45 seconds):**
+"I'm currently a [current role] at [company] where I [key responsibility/achievement]. In this role, I've [1-2 specific accomplishments with metrics]."
 
-**Key Success Behaviors:**
-• Maintain confident body language and eye contact
-• Speak clearly and at appropriate pace
-• Connect your experience to their specific needs
-• Show how you'll add immediate and long-term value
+**2. Past (45-60 seconds):**
+"My background includes [X years] of experience in [relevant field/industry]. Previously at [previous company], I [major accomplishment that's relevant to this role]. This experience taught me [relevant skill/lesson]."
 
-**Follow-Up:**
-Send personalized thank-you notes within 24 hours, referencing specific conversation points.`
+**3. Future (30-45 seconds):**
+"I'm excited about this opportunity because [specific reason related to the role/company]. I'm particularly drawn to [specific aspect of the job/company mission], and I believe my experience in [relevant area] would allow me to contribute to [specific goal/project]."
+
+**💡 Pro Tips:**
+• Practice until it flows naturally (not memorized)
+• Tailor the content to each specific role
+• Include metrics and specific achievements
+• Connect your story to their needs
+• End with enthusiasm for the opportunity
+• Keep it professional but let personality show
+
+**🎯 Example for Software Engineer:**
+"I'm currently a Senior Software Engineer at TechCorp, where I lead the development of our customer-facing web platform serving over 100,000 users. I've increased system performance by 40% and reduced deployment time from hours to minutes.
+
+Before this, I spent three years at StartupXYZ building their core product from scratch using React and Node.js. We grew from MVP to $1M ARR, and I learned the importance of scalable architecture and user-focused development.
+
+I'm excited about this role because of your focus on innovative fintech solutions. Your recent work on mobile payments aligns perfectly with my passion for creating seamless user experiences, and I'd love to contribute to your next-generation platform."
+
+Remember: This is your elevator pitch - make it compelling, relevant, and memorable!`
+      }
+      
+      return `**Interview Excellence Masterclass:**
+
+**🔥 Pre-Interview Preparation:**
+• Research company mission, recent news, competitors, and culture
+• Prepare 5-7 STAR method examples covering different competencies
+• Practice answers aloud (record yourself if possible)
+• Prepare 3-5 thoughtful questions about the role and company
+• Plan your route and outfit in advance
+
+**💬 During the Interview - Key Strategies:**
+
+**Active Engagement:**
+• Maintain confident eye contact and positive body language
+• Listen actively and ask clarifying questions
+• Build on interviewer's comments and show genuine interest
+• Use the interviewer's name occasionally
+
+**Answer Structure (STAR Method):**
+• **Situation:** Set the context briefly
+• **Task:** Explain your responsibility
+• **Action:** Detail what you did (focus here)
+• **Result:** Share measurable outcomes
+
+**📊 Powerful Closing Questions:**
+• "What does success look like in this role after 6 months?"
+• "What are the biggest challenges facing the team right now?"
+• "How does this role contribute to the company's strategic goals?"
+• "What do you enjoy most about working here?"
+
+**🎯 Post-Interview Follow-up:**
+• Send personalized thank-you emails within 24 hours
+• Reference specific conversation points
+• Reiterate your interest and key qualifications
+• Include any additional information you forgot to mention
+
+**⚡ Confidence Boosters:**
+• Arrive 10-15 minutes early
+• Bring extra copies of your resume
+• Take notes during the interview
+• Smile and show enthusiasm
+• Remember: they want you to succeed!`
 
     default:
-      return `**Strategic Career Development:**
+      return `**Strategic Career Development Roadmap:**
 
-• **Goal Setting**: Define clear short-term (1 year) and long-term (3-5 year) career objectives
-• **Skill Development**: Identify and develop both technical and soft skills relevant to your field
-• **Strategic Networking**: Build authentic relationships within your industry and target companies
-• **Achievement Documentation**: Maintain a record of accomplishments for performance reviews and applications
-• **Feedback Integration**: Regularly seek constructive feedback and act on improvement areas
-• **Proactive Contribution**: Look for opportunities to add value beyond basic job requirements
+**🎯 Career Planning Framework:**
 
-**Growth Mindset**: Focus on consistent improvement, learning from setbacks, and building valuable professional relationships.`
+**Phase 1: Self-Assessment (Month 1)**
+• Identify your core strengths and transferable skills
+• Define your values and non-negotiables
+• Assess current market value and skill gaps
+• Set 1-year and 5-year career objectives
+
+**Phase 2: Market Research (Month 2)**
+• Research target industries and companies
+• Analyze job market trends and salary ranges
+• Identify key decision-makers and influencers
+• Map out ideal career trajectory and required skills
+
+**Phase 3: Strategic Positioning (Months 3-4)**
+• Optimize LinkedIn profile and professional brand
+• Update resume and portfolio for target roles
+• Begin strategic networking in target industry
+• Start addressing identified skill gaps
+
+**📈 Ongoing Professional Development:**
+• Dedicate 5-10 hours weekly to skill development
+• Attend industry events and join professional associations
+• Seek mentorship and reverse mentoring opportunities
+• Document achievements and maintain success portfolio
+
+**🤝 Strategic Networking:**
+• Aim for 2-3 meaningful professional connections monthly
+• Engage authentically on professional platforms
+• Offer value before asking for favors
+• Maintain relationships with regular check-ins
+
+**💡 Career Advancement Tips:**
+• Volunteer for high-visibility projects
+• Develop both technical and leadership skills
+• Build cross-functional relationships
+• Stay informed about industry trends and innovations
+• Consider lateral moves for broader experience
+
+Remember: Career development is a marathon, not a sprint. Focus on consistent progress and building valuable relationships along the way.`
   }
 }
