@@ -51,20 +51,19 @@ export const useAI = () => {
       const result = data.result;
       console.log('✅ AI response generated successfully:', {
         responseLength: result.length,
-        isGeminiResponse: result.includes('Gemini') || result.length > 100,
+        isGeminiResponse: result.length > 50,
         timestamp: new Date().toISOString()
       });
       
       toast({
         title: "AI Response Generated",
-        description: "Your request has been processed successfully with Gemini AI!",
+        description: "Your request has been processed successfully!",
       });
       
       return result;
     } catch (error: any) {
       console.error('❌ AI generation error:', error);
       
-      // Provide specific error messages
       let errorMessage = "Unable to generate AI response.";
       if (error.message?.includes('network')) {
         errorMessage = "Network error. Please check your connection.";
@@ -80,7 +79,6 @@ export const useAI = () => {
         variant: "destructive",
       });
       
-      // Return a helpful fallback based on type
       return getFallbackResponse(type, prompt);
     } finally {
       setLoading(false);
@@ -123,11 +121,10 @@ Please provide:
 
       const response = await generateAIResponse(analysisPrompt, 'resume');
       
-      // Extract score from response (look for patterns like "Score: 85" or "85/100")
       const scoreMatch = response.match(/(?:score|rating)[:;\s]*(\d{1,3})/i) || 
                         response.match(/(\d{1,3})(?:\/100|\s*%|\s*out\s*of\s*100)/i);
       
-      let score = 75; // Default score
+      let score = 75;
       if (scoreMatch) {
         const extractedScore = parseInt(scoreMatch[1]);
         if (extractedScore >= 0 && extractedScore <= 100) {
@@ -173,7 +170,7 @@ function getFallbackResponse(type: string, prompt: string): string {
       return `**Resume Optimization Guidance:**
 
 • **ATS Optimization**: Include relevant keywords from job descriptions
-• **Quantify Achievements**: Use specific numbers and percentages
+• **Quantify Achievements**: Use specific numbers and percentages  
 • **Professional Format**: Use standard section headers and clean formatting
 • **Tailored Content**: Customize for each application
 • **Skills Section**: Include both technical and soft skills
@@ -199,7 +196,7 @@ Keep it concise and focused on how you can contribute to their success.`;
 
 Choose a real weakness that:
 • Isn't critical to the job
-• Shows self-awareness
+• Shows self-awareness  
 • Demonstrates growth
 
 Example: "I used to struggle with delegation, but I've learned to set clear expectations and trust my team, which has improved both efficiency and team development."`;

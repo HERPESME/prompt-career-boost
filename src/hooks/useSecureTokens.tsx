@@ -18,7 +18,6 @@ export const useSecureTokens = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Don't fetch tokens if auth is still loading
     if (authLoading) {
       console.log('Auth still loading, waiting...');
       return;
@@ -30,7 +29,6 @@ export const useSecureTokens = () => {
     } else {
       console.log('No user authenticated, setting loading to false');
       setLoading(false);
-      // Reset tokens when user logs out
       setTokens({ resume: 0, coverLetter: 0, interview: 0 });
     }
   }, [user, authLoading]);
@@ -46,56 +44,75 @@ export const useSecureTokens = () => {
       setLoading(true);
       console.log('🔍 Fetching tokens from database for user:', user.id);
       
-      const { data, error } = await supabase
+      // First, get all token records for this user (handling potential duplicates)
+      const { data: allRecords, error: fetchError } = await supabase
         .from('user_tokens')
-        .select('resume_tokens, cover_letter_tokens, interview_tokens')
+        .select('resume_tokens, cover_letter_tokens, interview_tokens, created_at')
         .eq('user_id', user.id)
-        .single();
+        .order('created_at', { ascending: false });
 
-      console.log('📊 Token fetch result:', { data, error });
+      console.log('📊 Token fetch result:', { data: allRecords, error: fetchError });
 
-      if (error) {
-        // If no tokens record exists, create one
-        if (error.code === 'PGRST116') {
-          console.log('🆕 No token record found, creating initial tokens');
-          const { data: newTokens, error: insertError } = await supabase
-            .from('user_tokens')
-            .insert({
-              user_id: user.id,
-              resume_tokens: 3,
-              cover_letter_tokens: 3,
-              interview_tokens: 5
-            })
-            .select('resume_tokens, cover_letter_tokens, interview_tokens')
-            .single();
+      if (fetchError) {
+        console.error('❌ Database error fetching tokens:', fetchError);
+        throw fetchError;
+      }
 
-          if (insertError) {
-            console.error('❌ Error creating initial tokens:', insertError);
-            throw insertError;
-          }
-          
-          console.log('✅ Initial tokens created:', newTokens);
-          setTokens({
-            resume: newTokens.resume_tokens,
-            coverLetter: newTokens.cover_letter_tokens,
-            interview: newTokens.interview_tokens
-          });
-        } else {
-          console.error('❌ Database error fetching tokens:', error);
-          throw error;
+      if (!allRecords || allRecords.length === 0) {
+        // No tokens record exists, create one
+        console.log('🆕 No token record found, creating initial tokens');
+        const { data: newTokens, error: insertError } = await supabase
+          .from('user_tokens')
+          .insert({
+            user_id: user.id,
+            resume_tokens: 3,
+            cover_letter_tokens: 3,
+            interview_tokens: 5
+          })
+          .select('resume_tokens, cover_letter_tokens, interview_tokens')
+          .single();
+
+        if (insertError) {
+          console.error('❌ Error creating initial tokens:', insertError);
+          throw insertError;
         }
-      } else {
-        console.log('✅ Tokens loaded successfully:', data);
+        
+        console.log('✅ Initial tokens created:', newTokens);
         setTokens({
-          resume: data.resume_tokens,
-          coverLetter: data.cover_letter_tokens,
-          interview: data.interview_tokens
+          resume: newTokens.resume_tokens,
+          coverLetter: newTokens.cover_letter_tokens,
+          interview: newTokens.interview_tokens
+        });
+      } else {
+        // Handle duplicates by cleaning up and using the latest record
+        const latestRecord = allRecords[0];
+        
+        if (allRecords.length > 1) {
+          console.log(`🧹 Found ${allRecords.length} duplicate records, cleaning up...`);
+          // Delete older duplicates
+          const { error: deleteError } = await supabase
+            .from('user_tokens')
+            .delete()
+            .eq('user_id', user.id)
+            .neq('created_at', latestRecord.created_at);
+          
+          if (deleteError) {
+            console.error('❌ Error cleaning up duplicates:', deleteError);
+          } else {
+            console.log('✅ Cleaned up duplicate token records');
+          }
+        }
+        
+        console.log('✅ Tokens loaded successfully:', latestRecord);
+        setTokens({
+          resume: latestRecord.resume_tokens,
+          coverLetter: latestRecord.cover_letter_tokens,
+          interview: latestRecord.interview_tokens
         });
       }
     } catch (error: any) {
       console.error('❌ Error in fetchTokens:', error);
       
-      // Don't show error toast if user is not authenticated
       if (user) {
         toast({
           title: "Token Error",
@@ -137,58 +154,60 @@ export const useSecureTokens = () => {
     try {
       console.log(`🔄 Consuming ${type} token for user:`, user.id);
       
-      // First verify we still have tokens (prevent race conditions)
-      const { data: verifyData, error: verifyError } = await supabase
+      // Get the current token record (latest one)
+      const { data: currentRecord, error: fetchError } = await supabase
         .from('user_tokens')
-        .select(dbTokenKey)
+        .select('resume_tokens, cover_letter_tokens, interview_tokens, created_at')
         .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .single();
       
-      if (verifyError) {
-        console.error('❌ Error verifying tokens before consumption:', verifyError);
-        throw verifyError;
+      if (fetchError) {
+        console.error('❌ Error fetching current tokens:', fetchError);
+        throw fetchError;
       }
       
-      const currentDbTokens = verifyData[dbTokenKey];
+      const currentDbTokens = currentRecord[dbTokenKey];
       console.log(`🔍 Database verification - ${type} tokens:`, currentDbTokens);
       
       if (currentDbTokens <= 0) {
         console.log(`🚫 Token verification failed - insufficient tokens in database`);
         setCurrentTokenType(type);
         setIsTokenModalOpen(true);
-        // Refresh local state
-        await fetchTokens();
+        await fetchTokens(); // Refresh local state
         return false;
       }
       
       // Decrement token in database
-      const { data, error } = await supabase
+      const { data: updatedRecord, error: updateError } = await supabase
         .from('user_tokens')
         .update({
           [dbTokenKey]: currentDbTokens - 1,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id)
+        .eq('created_at', currentRecord.created_at) // Ensure we update the correct record
         .select('resume_tokens, cover_letter_tokens, interview_tokens')
         .single();
 
-      if (error) {
-        console.error('❌ Error consuming token:', error);
-        throw error;
+      if (updateError) {
+        console.error('❌ Error consuming token:', updateError);
+        throw updateError;
       }
 
-      console.log('✅ Token consumed successfully, new balances:', data);
+      console.log('✅ Token consumed successfully, new balances:', updatedRecord);
 
       // Update local state
       setTokens({
-        resume: data.resume_tokens,
-        coverLetter: data.cover_letter_tokens,
-        interview: data.interview_tokens
+        resume: updatedRecord.resume_tokens,
+        coverLetter: updatedRecord.cover_letter_tokens,
+        interview: updatedRecord.interview_tokens
       });
 
       toast({
         title: "Token Used",
-        description: `${type.charAt(0).toUpperCase() + type.slice(1)} token consumed. Remaining: ${data[dbTokenKey]}`,
+        description: `${type.charAt(0).toUpperCase() + type.slice(1)} token consumed. Remaining: ${updatedRecord[dbTokenKey]}`,
       });
 
       return true;
@@ -209,15 +228,30 @@ export const useSecureTokens = () => {
     try {
       console.log('➕ Adding tokens for user:', user.id, tokenPackage);
       
+      // Get the current record first
+      const { data: currentRecord, error: fetchError } = await supabase
+        .from('user_tokens')
+        .select('resume_tokens, cover_letter_tokens, interview_tokens, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (fetchError) {
+        console.error('❌ Error fetching current tokens for addition:', fetchError);
+        throw fetchError;
+      }
+      
       const { data, error } = await supabase
         .from('user_tokens')
         .update({
-          resume_tokens: tokens.resume + tokenPackage.resume,
-          cover_letter_tokens: tokens.coverLetter + tokenPackage.coverLetter,
-          interview_tokens: tokens.interview + tokenPackage.interview,
+          resume_tokens: currentRecord.resume_tokens + tokenPackage.resume,
+          cover_letter_tokens: currentRecord.cover_letter_tokens + tokenPackage.coverLetter,
+          interview_tokens: currentRecord.interview_tokens + tokenPackage.interview,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id)
+        .eq('created_at', currentRecord.created_at)
         .select('resume_tokens, cover_letter_tokens, interview_tokens')
         .single();
 
