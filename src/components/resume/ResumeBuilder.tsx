@@ -8,12 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { FileText, Sparkles, Save, Download, Target } from "lucide-react";
+import { FileText, Sparkles, Save, Download, Target, Code, Eye } from "lucide-react";
 import { useSecureTokens } from "@/hooks/useSecureTokens";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useAI } from "@/hooks/useAI";
+import { ResumeUpload } from "./ResumeUpload";
+import { generateLaTeXResume } from "./LaTeXGenerator";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-interface ResumeData {
+export interface ResumeData {
   personalInfo: {
     fullName: string;
     email: string;
@@ -40,7 +43,7 @@ interface ResumeData {
 export const ResumeBuilder = () => {
   const { user } = useAuthUser();
   const { useToken } = useSecureTokens();
-  const { analyzeResume, loading: aiLoading } = useAI();
+  const { analyzeResume, generateAIResponse, loading: aiLoading } = useAI();
   
   const [resumeData, setResumeData] = useState<ResumeData>({
     personalInfo: {
@@ -62,6 +65,23 @@ export const ResumeBuilder = () => {
   const [loading, setLoading] = useState(false);
   const [atsScore, setAtsScore] = useState(0);
   const [newSkill, setNewSkill] = useState("");
+
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [extractedText, setExtractedText] = useState("");
+  const [optimizedResumeData, setOptimizedResumeData] = useState<ResumeData | null>(null);
+  const [generatedLaTeX, setGeneratedLaTeX] = useState("");
+  const [showLaTeXPreview, setShowLaTeXPreview] = useState(false);
+
+  const handleResumeUpload = (file: File, text: string) => {
+    setUploadedFile(file);
+    setExtractedText(text);
+  };
+
+  const removeUploadedFile = () => {
+    setUploadedFile(null);
+    setExtractedText("");
+    setOptimizedResumeData(null);
+  };
 
   const generateWithAI = async () => {
     if (!user) {
@@ -90,25 +110,90 @@ export const ResumeBuilder = () => {
 
     setLoading(true);
     try {
-      const resumeContent = JSON.stringify(resumeData);
-      const analysis = await analyzeResume(resumeContent, jobDescription);
+      let contentToOptimize = JSON.stringify(resumeData);
       
+      // If user uploaded a resume, include that context
+      if (uploadedFile && extractedText) {
+        contentToOptimize = `Original Resume: ${extractedText}\n\nForm Data: ${JSON.stringify(resumeData)}`;
+      }
+
+      // First, analyze the resume
+      const analysis = await analyzeResume(contentToOptimize, jobDescription);
       setAtsScore(analysis.score);
+
+      // Then, generate optimized content
+      const optimizationPrompt = `Based on this job description and resume data, optimize the resume content:
+
+JOB DESCRIPTION:
+${jobDescription}
+
+CURRENT RESUME DATA:
+${contentToOptimize}
+
+Please provide optimized content for each section in JSON format with the same structure as the input data. Focus on:
+1. ATS keyword optimization
+2. Quantified achievements
+3. Relevant skills highlighting
+4. Professional summary enhancement
+5. Experience descriptions improvement
+
+Return only the JSON data with optimized content.`;
+
+      const optimizedContent = await generateAIResponse(optimizationPrompt, 'resume');
+      
+      try {
+        // Try to parse the AI response as JSON
+        const parsedOptimization = JSON.parse(optimizedContent);
+        if (parsedOptimization.personalInfo) {
+          setOptimizedResumeData(parsedOptimization);
+          setResumeData(parsedOptimization);
+        }
+      } catch (parseError) {
+        console.log('AI response not in JSON format, using as text suggestions');
+      }
       
       toast({
-        title: "Resume Analysis Complete!",
+        title: "Resume Optimization Complete!",
         description: `AI suggestions generated with ATS score of ${analysis.score}%`,
       });
     } catch (error: any) {
       console.error("AI generation error:", error);
       toast({
-        title: "Analysis Failed",
+        title: "Optimization Failed",
         description: "Please try again later.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateLaTeXOutput = () => {
+    const latex = generateLaTeXResume(resumeData);
+    setGeneratedLaTeX(latex);
+    setShowLaTeXPreview(true);
+  };
+
+  const downloadLaTeX = () => {
+    if (!generatedLaTeX) {
+      generateLaTeXOutput();
+      return;
+    }
+    
+    const blob = new Blob([generatedLaTeX], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${resumeTitle || 'resume'}.tex`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "LaTeX Downloaded",
+      description: "Compile the .tex file with LaTeX to generate your PDF resume.",
+    });
   };
 
   const saveResume = async () => {
@@ -210,7 +295,7 @@ export const ResumeBuilder = () => {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             AI Resume Builder
           </h1>
-          <p className="text-gray-600 mt-2">Create an ATS-optimized resume with AI assistance</p>
+          <p className="text-gray-600 mt-2">Upload your resume and optimize it with AI assistance</p>
         </div>
         {atsScore > 0 && (
           <div className="flex items-center space-x-4">
@@ -226,59 +311,106 @@ export const ResumeBuilder = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* AI Assistant Panel */}
         <div className="lg:col-span-1">
-          <Card className="sticky top-6">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Sparkles className="w-5 h-5 mr-2 text-purple-600" />
-                AI Assistant
-              </CardTitle>
-              <CardDescription>
-                Paste a job description to get AI-powered optimization
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="resumeTitle">Resume Title</Label>
-                <Input
-                  id="resumeTitle"
-                  placeholder="e.g., Software Engineer Resume"
-                  value={resumeTitle}
-                  onChange={(e) => setResumeTitle(e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="jobDescription">Job Description</Label>
-                <Textarea
-                  id="jobDescription"
-                  placeholder="Paste the job description here..."
-                  value={jobDescription}
-                  onChange={(e) => setJobDescription(e.target.value)}
-                  rows={8}
-                />
-              </div>
+          <div className="space-y-6">
+            {/* Resume Upload */}
+            <ResumeUpload 
+              onResumeUploaded={handleResumeUpload}
+              uploadedFile={uploadedFile}
+              onRemoveFile={removeUploadedFile}
+            />
 
-              <Button
-                onClick={generateWithAI}
-                disabled={loading || aiLoading}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-              >
-                {loading || aiLoading ? "Optimizing..." : "Optimize with AI"}
-                <Target className="w-4 h-4 ml-2" />
-              </Button>
+            {/* AI Assistant */}
+            <Card className="sticky top-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Sparkles className="w-5 h-5 mr-2 text-purple-600" />
+                  AI Assistant
+                </CardTitle>
+                <CardDescription>
+                  {uploadedFile ? "Optimize your uploaded resume" : "Paste a job description to get AI-powered optimization"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="resumeTitle">Resume Title</Label>
+                  <Input
+                    id="resumeTitle"
+                    placeholder="e.g., Software Engineer Resume"
+                    value={resumeTitle}
+                    onChange={(e) => setResumeTitle(e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="jobDescription">Job Description</Label>
+                  <Textarea
+                    id="jobDescription"
+                    placeholder="Paste the job description here..."
+                    value={jobDescription}
+                    onChange={(e) => setJobDescription(e.target.value)}
+                    rows={8}
+                  />
+                </div>
 
-              <div className="flex space-x-2">
-                <Button onClick={saveResume} variant="outline" className="flex-1">
-                  <Save className="w-4 h-4 mr-2" />
-                  Save
+                <Button
+                  onClick={generateWithAI}
+                  disabled={loading || aiLoading}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                  {loading || aiLoading ? "Optimizing..." : "Optimize with AI"}
+                  <Target className="w-4 h-4 ml-2" />
                 </Button>
-                <Button variant="outline" className="flex-1">
+
+                <div className="flex space-x-2">
+                  <Button onClick={saveResume} variant="outline" className="flex-1">
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </Button>
+                  
+                  <Dialog open={showLaTeXPreview} onOpenChange={setShowLaTeXPreview}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        onClick={generateLaTeXOutput}
+                        variant="outline" 
+                        className="flex-1"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Preview
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>LaTeX Resume Preview</DialogTitle>
+                        <DialogDescription>
+                          This is your generated LaTeX code. Download and compile it to create your PDF resume.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="mt-4">
+                        <pre className="bg-gray-100 p-4 rounded-lg text-xs overflow-x-auto">
+                          <code>{generatedLaTeX}</code>
+                        </pre>
+                        <div className="flex space-x-2 mt-4">
+                          <Button onClick={downloadLaTeX} className="flex-1">
+                            <Download className="w-4 h-4 mr-2" />
+                            Download LaTeX
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                
+                <Button
+                  onClick={downloadLaTeX}
+                  variant="default"
+                  className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+                >
                   <Download className="w-4 h-4 mr-2" />
-                  Export
+                  Export LaTeX Resume
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Resume Form */}
