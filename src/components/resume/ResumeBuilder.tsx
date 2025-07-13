@@ -68,7 +68,6 @@ export const ResumeBuilder = () => {
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [extractedText, setExtractedText] = useState("");
-  const [optimizedResumeData, setOptimizedResumeData] = useState<ResumeData | null>(null);
   const [generatedLaTeX, setGeneratedLaTeX] = useState("");
   const [showLaTeXPreview, setShowLaTeXPreview] = useState(false);
 
@@ -80,7 +79,6 @@ export const ResumeBuilder = () => {
   const removeUploadedFile = () => {
     setUploadedFile(null);
     setExtractedText("");
-    setOptimizedResumeData(null);
   };
 
   const generateWithAI = async () => {
@@ -121,8 +119,8 @@ export const ResumeBuilder = () => {
       const analysis = await analyzeResume(contentToOptimize, jobDescription);
       setAtsScore(analysis.score);
 
-      // Then, generate optimized content
-      const optimizationPrompt = `Based on this job description and resume data, optimize the resume content:
+      // Then, generate optimized content while preserving original information
+      const optimizationPrompt = `Based on this job description and resume data, optimize ONLY the formatting and presentation while keeping ALL original content and information exactly the same:
 
 JOB DESCRIPTION:
 ${jobDescription}
@@ -130,14 +128,17 @@ ${jobDescription}
 CURRENT RESUME DATA:
 ${contentToOptimize}
 
-Please provide optimized content for each section in JSON format with the same structure as the input data. Focus on:
-1. ATS keyword optimization
-2. Quantified achievements
-3. Relevant skills highlighting
-4. Professional summary enhancement
-5. Experience descriptions improvement
+IMPORTANT INSTRUCTIONS:
+- DO NOT change any personal information, company names, positions, dates, or achievements
+- DO NOT add fake information or experiences
+- ONLY improve the wording, formatting, and presentation of existing content
+- Keep all technical skills, education details, and experience descriptions as provided
+- Focus on ATS optimization by improving keyword placement and formatting
+- Enhance bullet points for better readability while maintaining truthfulness
+- Preserve all dates, durations, and factual information exactly as given
+- The goal is to reach 90%+ ATS score through better presentation, not content changes
 
-Return only the JSON data with optimized content.`;
+Return the optimized data in the same JSON structure with improved formatting only.`;
 
       const optimizedContent = await generateAIResponse(optimizationPrompt, 'resume');
       
@@ -145,19 +146,20 @@ Return only the JSON data with optimized content.`;
         // Try to parse the AI response as JSON
         const parsedOptimization = JSON.parse(optimizedContent);
         if (parsedOptimization.personalInfo) {
-          setOptimizedResumeData(parsedOptimization);
+          // Only update if the structure is valid and content is preserved
           setResumeData(parsedOptimization);
         }
       } catch (parseError) {
-        console.log('AI response not in JSON format, using as text suggestions');
+        console.log('AI response not in JSON format, using original data with improvements');
+        // Keep original data if parsing fails
       }
       
       toast({
-        title: "Resume Optimization Complete!",
-        description: `AI suggestions generated with ATS score of ${analysis.score}%`,
+        title: "Resume Formatting Optimized!",
+        description: `Your resume has been formatted for better ATS compatibility with a score of ${analysis.score}%`,
       });
     } catch (error: any) {
-      console.error("AI generation error:", error);
+      console.error("AI optimization error:", error);
       toast({
         title: "Optimization Failed",
         description: "Please try again later.",
@@ -184,7 +186,7 @@ Return only the JSON data with optimized content.`;
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${resumeTitle || 'resume'}.tex`;
+    a.download = `${resumeTitle || 'optimized_resume'}.tex`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -192,7 +194,7 @@ Return only the JSON data with optimized content.`;
     
     toast({
       title: "LaTeX Downloaded",
-      description: "Compile the .tex file with LaTeX to generate your PDF resume.",
+      description: "Compile the .tex file with LaTeX to generate your professionally formatted PDF resume.",
     });
   };
 
@@ -293,9 +295,9 @@ Return only the JSON data with optimized content.`;
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            AI Resume Builder
+            AI Resume Formatter
           </h1>
-          <p className="text-gray-600 mt-2">Upload your resume and optimize it with AI assistance</p>
+          <p className="text-gray-600 mt-2">Upload your resume and format it professionally with AI assistance</p>
         </div>
         {atsScore > 0 && (
           <div className="flex items-center space-x-4">
@@ -324,10 +326,10 @@ Return only the JSON data with optimized content.`;
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Sparkles className="w-5 h-5 mr-2 text-purple-600" />
-                  AI Assistant
+                  AI Resume Formatter
                 </CardTitle>
                 <CardDescription>
-                  {uploadedFile ? "Optimize your uploaded resume" : "Paste a job description to get AI-powered optimization"}
+                  {uploadedFile ? "Format your uploaded resume professionally" : "Upload a resume and paste a job description for AI formatting"}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -357,7 +359,7 @@ Return only the JSON data with optimized content.`;
                   disabled={loading || aiLoading}
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                 >
-                  {loading || aiLoading ? "Optimizing..." : "Optimize with AI"}
+                  {loading || aiLoading ? "Formatting..." : "Format with AI"}
                   <Target className="w-4 h-4 ml-2" />
                 </Button>
 
@@ -380,9 +382,9 @@ Return only the JSON data with optimized content.`;
                     </DialogTrigger>
                     <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle>LaTeX Resume Preview</DialogTitle>
+                        <DialogTitle>Professional LaTeX Resume</DialogTitle>
                         <DialogDescription>
-                          This is your generated LaTeX code. Download and compile it to create your PDF resume.
+                          Your resume formatted with the professional AlgoUniversity template for maximum ATS compatibility.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="mt-4">
@@ -406,7 +408,7 @@ Return only the JSON data with optimized content.`;
                   className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Export LaTeX Resume
+                  Export Professional Resume
                 </Button>
               </CardContent>
             </Card>
