@@ -12,7 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { useSecureTokens } from "@/hooks/useSecureTokens";
 import { useAI } from "@/hooks/useAI";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { MessageSquare, Play, Pause, RotateCcw, Save, Target, Clock, Award } from "lucide-react";
+import { MessageSquare, Play, Pause, RotateCcw, Save, Target, Clock, Award, Sparkles } from "lucide-react";
 
 interface Question {
   id: string;
@@ -97,6 +97,8 @@ export const InterviewCoach = () => {
     companyName: "",
     position: "",
     interviewType: "general" as "general" | "technical" | "behavioral" | "case-study",
+    experienceLevel: "mid" as "junior" | "mid" | "senior",
+    jobDescription: "",
   });
   
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -127,60 +129,184 @@ export const InterviewCoach = () => {
       return;
     }
 
+    // Check and consume token securely
+    const canUseToken = await useToken('interview');
+    if (!canUseToken) {
+      return; // Token modal will be shown
+    }
+
     setLoading(true);
     try {
-      // Generate sample questions based on interview type and position
-      const sampleQuestions: Question[] = [
-        {
-          id: "1",
-          question: `Tell me about yourself and why you're interested in the ${interviewData.position} role${interviewData.companyName ? ` at ${interviewData.companyName}` : ''}.`,
-          type: "general",
-          difficulty: "easy"
-        },
-        {
-          id: "2", 
-          question: `What are your greatest strengths as a ${interviewData.position}?`,
-          type: "behavioral",
-          difficulty: "easy"
-        },
-        {
-          id: "3",
-          question: `Describe a challenging project you worked on. What was your approach and what did you learn?`,
-          type: "behavioral", 
-          difficulty: "medium"
-        },
-        {
-          id: "4",
-          question: `How do you stay updated with the latest trends and technologies in your field?`,
-          type: "technical",
-          difficulty: "medium"
-        },
-        {
-          id: "5",
-          question: `Where do you see yourself in 5 years, and how does this role fit into your career goals?`,
-          type: "general",
-          difficulty: "medium"
-        }
-      ];
+      // Create AI prompt for generating challenging interview questions
+      const questionPrompt = `Generate 5 challenging and realistic interview questions for a ${interviewData.experienceLevel}-level ${interviewData.position} position${interviewData.companyName ? ` at ${interviewData.companyName}` : ''}.
 
-      setQuestions(sampleQuestions);
+Interview Type: ${interviewData.interviewType}
+Experience Level: ${interviewData.experienceLevel}
+${interviewData.jobDescription ? `Job Description: ${interviewData.jobDescription}` : ''}
+
+Requirements:
+- Questions should be relevant to the specific role and experience level
+- Mix different difficulty levels (easy, medium, hard)
+- For technical interviews: include coding concepts, system design, problem-solving
+- For behavioral interviews: focus on leadership, teamwork, conflict resolution
+- For general interviews: mix of background, motivation, and role-specific questions
+- Make questions challenging but realistic for actual interviews
+
+Format each question as:
+Question: [question text]
+Type: [behavioral/technical/general]
+Difficulty: [easy/medium/hard]
+
+Provide exactly 5 questions.`;
+
+      const aiResponse = await generateAIResponse(questionPrompt, 'interview');
+      
+      // Parse AI response to extract questions
+      const generatedQuestions = parseAIQuestions(aiResponse);
+      
+      if (generatedQuestions.length === 0) {
+        // Fallback to smarter default questions if AI parsing fails
+        const fallbackQuestions = generateSmartFallbackQuestions(interviewData);
+        setQuestions(fallbackQuestions);
+      } else {
+        setQuestions(generatedQuestions);
+      }
+      
       setCurrentQuestionIndex(0);
       setResponses([]);
       setCurrentAnswer("");
       
       toast({
-        title: "Interview Questions Ready!",
-        description: `Generated ${sampleQuestions.length} questions for your practice session.`,
+        title: "AI-Generated Questions Ready!",
+        description: `Generated ${questions.length > 0 ? questions.length : 5} challenging interview questions tailored to your role.`,
       });
     } catch (error: any) {
       console.error("Question generation error:", error);
+      // Use smart fallback questions
+      const fallbackQuestions = generateSmartFallbackQuestions(interviewData);
+      setQuestions(fallbackQuestions);
+      
       toast({
-        title: "Generation Complete",
-        description: "Sample interview questions are ready for practice.",
+        title: "Questions Generated",
+        description: "Interview questions are ready for practice.",
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const parseAIQuestions = (aiResponse: string): Question[] => {
+    const questions: Question[] = [];
+    const lines = aiResponse.split('\n');
+    let currentQuestion = null;
+    let questionCounter = 1;
+
+    for (const line of lines) {
+      if (line.toLowerCase().includes('question:')) {
+        const questionText = line.replace(/question:\s*/i, '').trim();
+        if (questionText) {
+          currentQuestion = {
+            id: questionCounter.toString(),
+            question: questionText,
+            type: "general" as any,
+            difficulty: "medium" as any
+          };
+        }
+      } else if (currentQuestion && line.toLowerCase().includes('type:')) {
+        const type = line.replace(/type:\s*/i, '').trim().toLowerCase();
+        if (['behavioral', 'technical', 'general'].includes(type)) {
+          currentQuestion.type = type as any;
+        }
+      } else if (currentQuestion && line.toLowerCase().includes('difficulty:')) {
+        const difficulty = line.replace(/difficulty:\s*/i, '').trim().toLowerCase();
+        if (['easy', 'medium', 'hard'].includes(difficulty)) {
+          currentQuestion.difficulty = difficulty as any;
+        }
+        // Question is complete, add it
+        questions.push(currentQuestion);
+        currentQuestion = null;
+        questionCounter++;
+      }
+    }
+
+    // Handle case where last question doesn't have difficulty specified
+    if (currentQuestion) {
+      questions.push(currentQuestion);
+    }
+
+    return questions;
+  };
+
+  const generateSmartFallbackQuestions = (data: typeof interviewData): Question[] => {
+    const { position, interviewType, experienceLevel, companyName } = data;
+    
+    const baseQuestions: Question[] = [];
+
+    if (interviewType === 'technical') {
+      baseQuestions.push(
+        {
+          id: "1",
+          question: `Explain the most complex technical problem you've solved in your ${position} experience. Walk me through your approach, the technologies you used, and how you measured success.`,
+          type: "technical",
+          difficulty: "hard"
+        },
+        {
+          id: "2",
+          question: `If you had to design a scalable system for ${position === 'Software Engineer' ? 'handling millions of concurrent users' : 'processing large datasets'}, what architecture would you choose and why?`,
+          type: "technical",
+          difficulty: "hard"
+        },
+        {
+          id: "3",
+          question: `Describe a time when you had to optimize performance in a ${position} project. What was the bottleneck and how did you resolve it?`,
+          type: "technical",
+          difficulty: "medium"
+        }
+      );
+    } else if (interviewType === 'behavioral') {
+      baseQuestions.push(
+        {
+          id: "1",
+          question: `Tell me about a time when you had to lead a project or initiative as a ${position}. How did you handle challenges and ensure team alignment?`,
+          type: "behavioral",
+          difficulty: "medium"
+        },
+        {
+          id: "2",
+          question: `Describe a situation where you disagreed with a senior colleague or manager about a technical decision. How did you handle it?`,
+          type: "behavioral",
+          difficulty: "hard"
+        }
+      );
+    }
+
+    // Add role-specific questions
+    baseQuestions.push(
+      {
+        id: (baseQuestions.length + 1).toString(),
+        question: `What emerging trends or technologies in the ${position} field excite you most, and how are you preparing to leverage them?`,
+        type: "general",
+        difficulty: "medium"
+      },
+      {
+        id: (baseQuestions.length + 2).toString(),
+        question: `${companyName ? `Why do you want to work at ${companyName} specifically` : 'Why are you interested in this role'}, and how does it align with your career goals?`,
+        type: "general",
+        difficulty: "easy"
+      }
+    );
+
+    // Ensure we have 5 questions
+    while (baseQuestions.length < 5) {
+      baseQuestions.push({
+        id: (baseQuestions.length + 1).toString(),
+        question: `What is the most challenging aspect of being a ${position}, and how do you overcome it?`,
+        type: "general",
+        difficulty: "medium"
+      });
+    }
+
+    return baseQuestions.slice(0, 5);
   };
 
   const startInterview = () => {
@@ -236,6 +362,7 @@ QUESTION: ${currentQuestion.question}
 QUESTION TYPE: ${currentQuestion.type}
 DIFFICULTY: ${currentQuestion.difficulty}
 POSITION: ${interviewData.position}
+EXPERIENCE LEVEL: ${interviewData.experienceLevel}
 COMPANY: ${interviewData.companyName || 'Not specified'}
 
 CANDIDATE ANSWER: ${currentAnswer}
@@ -403,7 +530,7 @@ Format: Score: [number] | Feedback: [detailed feedback]`;
           <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
             AI Interview Coach
           </h1>
-          <p className="text-gray-600 mt-2">Practice interviews with AI-powered feedback</p>
+          <p className="text-gray-600 mt-2">Practice interviews with AI-powered challenging questions</p>
         </div>
         {overallScore > 0 && (
           <div className="flex items-center space-x-4">
@@ -426,7 +553,7 @@ Format: Score: [number] | Feedback: [detailed feedback]`;
                 Interview Setup
               </CardTitle>
               <CardDescription>
-                Configure your interview practice session
+                Configure your AI-powered interview practice session
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -441,10 +568,10 @@ Format: Score: [number] | Feedback: [detailed feedback]`;
               </div>
 
               <div>
-                <Label htmlFor="position">Position</Label>
+                <Label htmlFor="position">Position *</Label>
                 <Input
                   id="position"
-                  placeholder="e.g., Software Engineer"
+                  placeholder="e.g., Software Engineer, Product Manager"
                   value={interviewData.position}
                   onChange={(e) => setInterviewData(prev => ({ ...prev, position: e.target.value }))}
                 />
@@ -454,10 +581,24 @@ Format: Score: [number] | Feedback: [detailed feedback]`;
                 <Label htmlFor="companyName">Company (Optional)</Label>
                 <Input
                   id="companyName"
-                  placeholder="e.g., Google"
+                  placeholder="e.g., Google, Meta, Apple"
                   value={interviewData.companyName}
                   onChange={(e) => setInterviewData(prev => ({ ...prev, companyName: e.target.value }))}
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="experienceLevel">Experience Level</Label>
+                <Select value={interviewData.experienceLevel} onValueChange={(value: any) => setInterviewData(prev => ({ ...prev, experienceLevel: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="junior">Junior (0-2 years)</SelectItem>
+                    <SelectItem value="mid">Mid-level (3-5 years)</SelectItem>
+                    <SelectItem value="senior">Senior (5+ years)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -475,13 +616,34 @@ Format: Score: [number] | Feedback: [detailed feedback]`;
                 </Select>
               </div>
 
+              <div>
+                <Label htmlFor="jobDescription">Job Description (Optional)</Label>
+                <Textarea
+                  id="jobDescription"
+                  placeholder="Paste the job description here for more targeted questions..."
+                  value={interviewData.jobDescription}
+                  onChange={(e) => setInterviewData(prev => ({ ...prev, jobDescription: e.target.value }))}
+                  rows={3}
+                />
+              </div>
+
               <div className="space-y-2">
                 <Button
                   onClick={generateQuestions}
-                  disabled={loading}
+                  disabled={loading || aiLoading}
                   className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
                 >
-                  {loading ? "Generating..." : "Generate Questions"}
+                  {loading || aiLoading ? (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                      Generating AI Questions...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Generate AI Questions
+                    </>
+                  )}
                 </Button>
 
                 {questions.length > 0 && !isInterviewActive && (
@@ -573,9 +735,9 @@ Format: Score: [number] | Feedback: [detailed feedback]`;
           ) : (
             <Card>
               <CardContent className="text-center py-12">
-                <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Ready to Practice?</h3>
-                <p className="text-gray-600 mb-4">Generate interview questions to get started</p>
+                <Sparkles className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Ready for AI-Powered Interview Practice?</h3>
+                <p className="text-gray-600 mb-4">Generate challenging, role-specific questions tailored to your position and experience level</p>
               </CardContent>
             </Card>
           )}
