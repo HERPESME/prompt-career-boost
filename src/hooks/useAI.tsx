@@ -8,6 +8,7 @@ export const useAI = () => {
 
   const generateAIResponse = async (prompt: string, type: 'resume' | 'cover-letter' | 'interview' | 'general' = 'general'): Promise<string> => {
     if (!prompt.trim()) {
+      console.log('❌ Empty prompt provided');
       toast({
         title: "Input Required",
         description: "Please provide your request or question.",
@@ -17,32 +18,65 @@ export const useAI = () => {
     }
 
     setLoading(true);
-    console.log('Generating AI response with Gemini:', { type, promptLength: prompt.length });
+    console.log('🤖 Generating AI response with Gemini:', { 
+      type, 
+      promptLength: prompt.length,
+      timestamp: new Date().toISOString()
+    });
     
     try {
+      console.log('📡 Calling Supabase edge function: ai-chat');
+      
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: { prompt, type }
       });
 
+      console.log('📨 Edge function response:', { 
+        hasData: !!data, 
+        hasError: !!error,
+        dataKeys: data ? Object.keys(data) : [],
+        error 
+      });
+
       if (error) {
-        console.error('AI service error:', error);
-        throw new Error('AI service temporarily unavailable');
+        console.error('❌ AI service error:', error);
+        throw new Error(`AI service error: ${error.message || 'Unknown error'}`);
       }
 
-      const result = data?.result || 'I apologize, but I cannot generate a response at this moment. Please try again.';
+      if (!data || !data.result) {
+        console.error('❌ No result in AI response:', data);
+        throw new Error('AI service returned empty response');
+      }
+
+      const result = data.result;
+      console.log('✅ AI response generated successfully:', {
+        responseLength: result.length,
+        isGeminiResponse: result.includes('Gemini') || result.length > 100,
+        timestamp: new Date().toISOString()
+      });
       
-      console.log('AI response generated successfully');
       toast({
         title: "AI Response Generated",
-        description: "Your request has been processed successfully!",
+        description: "Your request has been processed successfully with Gemini AI!",
       });
       
       return result;
     } catch (error: any) {
-      console.error('AI generation error:', error);
+      console.error('❌ AI generation error:', error);
+      
+      // Provide specific error messages
+      let errorMessage = "Unable to generate AI response.";
+      if (error.message?.includes('network')) {
+        errorMessage = "Network error. Please check your connection.";
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = "Request timed out. Please try again.";
+      } else if (error.message?.includes('rate limit')) {
+        errorMessage = "Too many requests. Please wait a moment.";
+      }
+      
       toast({
         title: "AI Service Error",
-        description: "Unable to generate AI response. Please try again in a moment.",
+        description: errorMessage + " Using fallback response.",
         variant: "destructive",
       });
       
@@ -55,6 +89,11 @@ export const useAI = () => {
 
   const analyzeResume = async (resumeContent: string, jobDescription?: string): Promise<{ score: number; feedback: string }> => {
     setLoading(true);
+    console.log('📋 Starting resume analysis:', {
+      resumeContentLength: resumeContent.length,
+      hasJobDescription: !!jobDescription,
+      timestamp: new Date().toISOString()
+    });
     
     try {
       const analysisPrompt = jobDescription 
@@ -96,14 +135,19 @@ Please provide:
         }
       }
 
-      console.log('Resume analysis completed:', { score, feedbackLength: response.length });
+      console.log('📊 Resume analysis completed:', { 
+        score, 
+        feedbackLength: response.length,
+        scoreExtracted: !!scoreMatch,
+        timestamp: new Date().toISOString()
+      });
       
       return {
         score,
         feedback: response
       };
     } catch (error) {
-      console.error('Resume analysis error:', error);
+      console.error('❌ Resume analysis error:', error);
       return {
         score: 65,
         feedback: "Unable to analyze resume at this time. Please ensure your resume includes relevant keywords, quantified achievements, and proper formatting for ATS compatibility."

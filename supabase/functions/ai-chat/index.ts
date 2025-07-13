@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
@@ -14,12 +13,17 @@ serve(async (req) => {
 
   try {
     const { prompt, type } = await req.json()
-    console.log('AI request received:', { type, promptLength: prompt?.length })
+    console.log('🤖 AI request received:', { 
+      type, 
+      promptLength: prompt?.length,
+      timestamp: new Date().toISOString(),
+      hasPrompt: !!prompt
+    })
 
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY')
     
     if (!geminiApiKey) {
-      console.log('GEMINI_API_KEY not found, using fallback response')
+      console.log('⚠️ GEMINI_API_KEY not found, using fallback response')
       return new Response(JSON.stringify({ 
         result: generateIntelligentResponse(prompt, type) 
       }), {
@@ -27,39 +31,50 @@ serve(async (req) => {
       })
     }
 
+    console.log('🔑 Gemini API key found, making request to Gemini API')
+
     // Use Gemini 1.5 Flash for fast, cost-effective responses
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`
+    
+    const requestBody = {
+      contents: [{
+        parts: [{
+          text: `${getSystemPrompt(type)}\n\nUser Request: ${prompt}`
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 2048,
+      },
+      safetySettings: [
+        {
+          category: "HARM_CATEGORY_HARASSMENT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_HATE_SPEECH",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        }
+      ]
+    }
+
+    console.log('📡 Making request to Gemini API...')
+    
+    const response = await fetch(geminiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `${getSystemPrompt(type)}\n\nUser Request: ${prompt}`
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        },
-        safetySettings: [
-          {
-            category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          },
-          {
-            category: "HARM_CATEGORY_HATE_SPEECH",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          }
-        ]
-      }),
+      body: JSON.stringify(requestBody),
     })
 
+    console.log('📨 Gemini API response status:', response.status)
+
     if (!response.ok) {
-      console.log('Gemini API error, status:', response.status)
+      const errorText = await response.text()
+      console.error('❌ Gemini API error:', response.status, errorText)
       return new Response(JSON.stringify({ 
         result: generateIntelligentResponse(prompt, type) 
       }), {
@@ -68,15 +83,25 @@ serve(async (req) => {
     }
 
     const data = await response.json()
-    console.log('Gemini response received successfully')
+    console.log('✅ Gemini response received:', {
+      hasCandidates: !!data.candidates,
+      candidatesLength: data.candidates?.length || 0,
+      timestamp: new Date().toISOString()
+    })
     
     const result = data.candidates?.[0]?.content?.parts?.[0]?.text || generateIntelligentResponse(prompt, type)
+    
+    console.log('📤 Returning AI response:', {
+      resultLength: result.length,
+      isFromGemini: !!data.candidates?.[0]?.content?.parts?.[0]?.text,
+      timestamp: new Date().toISOString()
+    })
 
     return new Response(JSON.stringify({ result }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    console.error('Error in ai-chat function:', error)
+    console.error('❌ Error in ai-chat function:', error)
     
     // Always provide intelligent fallback responses
     try {
@@ -87,6 +112,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     } catch (parseError) {
+      console.error('❌ Parse error in fallback:', parseError)
       return new Response(JSON.stringify({ 
         result: "I'm here to help with your career development. Please try again with your request." 
       }), {
