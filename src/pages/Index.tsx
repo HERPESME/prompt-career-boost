@@ -22,9 +22,9 @@ const Index = () => {
       title: "AI Resume Builder",
       description: "Create ATS-optimized resumes tailored to specific job descriptions with AI assistance.",
       href: "/resume",
-      gradient: "from-purple-600 to-purple-700",
-      bgGradient: "from-background to-purple-50",
-      hoverGradient: "from-purple-700 to-purple-800",
+      gradient: "from-blue-600 to-cyan-600",
+      bgGradient: "from-background to-blue-50",
+      hoverGradient: "from-blue-700 to-cyan-700",
       tokenType: "resume" as const
     },
     {

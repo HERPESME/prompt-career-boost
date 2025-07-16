@@ -23,8 +23,8 @@ const pricingTiers: PricingTier[] = [
     coverLetterTokens: 15,
     interviewTokens: 20,
     icon: Zap,
-    gradient: "from-purple-600 to-purple-700",
-    bgGradient: "from-background to-purple-50"
+    gradient: "from-blue-600 to-cyan-600",
+    bgGradient: "from-background to-blue-50"
   },
   {
     name: "Standard", 
