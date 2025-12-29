@@ -8,11 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { FileText, Sparkles, Save, Download, Target, Code, Eye } from "lucide-react";
+import { FileText, Sparkles, Save, Download, Target, Code, Eye, PanelLeftClose, PanelLeft } from "lucide-react";
 import { useSecureTokens } from "@/hooks/useSecureTokens";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useAI } from "@/hooks/useAI";
 import { ResumeUpload } from "./ResumeUpload";
+import { ResumePreview } from "./ResumePreview";
+import { ExportOptions } from "./ExportOptions";
 import { generateLaTeXResume } from "./LaTeXGenerator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -70,10 +72,115 @@ export const ResumeBuilder = () => {
   const [extractedText, setExtractedText] = useState("");
   const [generatedLaTeX, setGeneratedLaTeX] = useState("");
   const [showLaTeXPreview, setShowLaTeXPreview] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
+  const [isParsing, setIsParsing] = useState(false);
 
-  const handleResumeUpload = (file: File, text: string) => {
+  const handleResumeUpload = async (file: File, text: string) => {
     setUploadedFile(file);
     setExtractedText(text);
+    setIsParsing(true);
+
+    try {
+      // Use AI to parse the resume text into structured data
+      const parsePrompt = `Parse this resume text and extract the information into a JSON structure. Be accurate and only extract information that is explicitly present in the resume. If a field is not found, leave it as an empty string or empty array.
+
+RESUME TEXT:
+${text}
+
+Return ONLY valid JSON in this exact format (no markdown, no explanation):
+{
+  "personalInfo": {
+    "fullName": "",
+    "email": "",
+    "phone": "",
+    "location": "",
+    "linkedin": "",
+    "portfolio": ""
+  },
+  "summary": "",
+  "experience": [
+    {
+      "company": "",
+      "position": "",
+      "duration": "",
+      "description": ""
+    }
+  ],
+  "education": [
+    {
+      "institution": "",
+      "degree": "",
+      "year": ""
+    }
+  ],
+  "skills": []
+}`;
+
+      const response = await generateAIResponse(parsePrompt, 'resume');
+      
+      try {
+        // Clean up the response - remove markdown code blocks if present
+        let cleanedResponse = response.trim();
+        if (cleanedResponse.startsWith('```json')) {
+          cleanedResponse = cleanedResponse.slice(7);
+        } else if (cleanedResponse.startsWith('```')) {
+          cleanedResponse = cleanedResponse.slice(3);
+        }
+        if (cleanedResponse.endsWith('```')) {
+          cleanedResponse = cleanedResponse.slice(0, -3);
+        }
+        cleanedResponse = cleanedResponse.trim();
+
+        const parsedData = JSON.parse(cleanedResponse);
+        
+        // Validate and merge with existing structure
+        if (parsedData.personalInfo || parsedData.experience || parsedData.education || parsedData.skills) {
+          setResumeData(prev => ({
+            personalInfo: {
+              fullName: parsedData.personalInfo?.fullName || prev.personalInfo.fullName,
+              email: parsedData.personalInfo?.email || prev.personalInfo.email,
+              phone: parsedData.personalInfo?.phone || prev.personalInfo.phone,
+              location: parsedData.personalInfo?.location || prev.personalInfo.location,
+              linkedin: parsedData.personalInfo?.linkedin || prev.personalInfo.linkedin,
+              portfolio: parsedData.personalInfo?.portfolio || prev.personalInfo.portfolio,
+            },
+            summary: parsedData.summary || prev.summary,
+            experience: Array.isArray(parsedData.experience) && parsedData.experience.length > 0 
+              ? parsedData.experience.filter((e: any) => e.company || e.position)
+              : prev.experience,
+            education: Array.isArray(parsedData.education) && parsedData.education.length > 0
+              ? parsedData.education.filter((e: any) => e.institution || e.degree)
+              : prev.education,
+            skills: Array.isArray(parsedData.skills) && parsedData.skills.length > 0
+              ? parsedData.skills
+              : prev.skills,
+          }));
+          
+          toast({
+            title: "Resume Parsed Successfully!",
+            description: "Form fields have been auto-filled. Review and add your target job description.",
+          });
+        } else {
+          throw new Error("Invalid parsed structure");
+        }
+      } catch (parseError) {
+        console.error("Failed to parse AI response:", parseError);
+        toast({
+          title: "Partial Parse",
+          description: "Could not auto-fill some fields. Please fill them manually.",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error("AI parsing error:", error);
+      toast({
+        title: "Parse Failed",
+        description: "Could not parse resume. Please fill the form manually.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsParsing(false);
+    }
   };
 
   const removeUploadedFile = () => {
@@ -291,80 +398,108 @@ Return the optimized data in the same JSON structure with improved formatting on
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className={`mx-auto p-6 space-y-8 ${showPreview ? 'max-w-[1600px]' : 'max-w-6xl'}`}>
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            AI Resume Formatter
+          <h1 className="text-3xl font-bold text-slate-900">
+            Resume Builder
           </h1>
-          <p className="text-gray-600 mt-2">Upload your resume and format it professionally with AI assistance</p>
+          <p className="text-slate-600 mt-1">Create an ATS-optimized resume tailored to your target role</p>
         </div>
-        {atsScore > 0 && (
-          <div className="flex items-center space-x-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{atsScore}%</div>
-              <div className="text-sm text-gray-600">ATS Score</div>
+        <div className="flex items-center gap-4">
+          {/* Preview Toggle */}
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowPreview(!showPreview)}
+            className="border-slate-300 hover:bg-slate-50"
+          >
+            {showPreview ? (
+              <>
+                <PanelLeftClose className="w-4 h-4 mr-2" />
+                Hide Preview
+              </>
+            ) : (
+              <>
+                <PanelLeft className="w-4 h-4 mr-2" />
+                Show Preview
+              </>
+            )}
+          </Button>
+          
+          {atsScore > 0 && (
+            <div className="flex items-center gap-4 px-5 py-3 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-emerald-600">{atsScore}%</div>
+                <div className="text-xs font-medium text-emerald-700 uppercase tracking-wide">ATS Score</div>
+              </div>
+              <Progress value={atsScore} className="w-28 h-2" />
             </div>
-            <Progress value={atsScore} className="w-24" />
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={`grid grid-cols-1 gap-8 ${showPreview ? 'xl:grid-cols-[1fr_2fr_1.5fr] lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
         {/* AI Assistant Panel */}
-        <div className="lg:col-span-1">
+        <div className={showPreview ? '' : 'lg:col-span-1'}>
           <div className="space-y-6">
             {/* Resume Upload */}
             <ResumeUpload 
               onResumeUploaded={handleResumeUpload}
               uploadedFile={uploadedFile}
               onRemoveFile={removeUploadedFile}
+              isProcessing={isParsing}
             />
 
             {/* AI Assistant */}
-            <Card className="sticky top-6">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Sparkles className="w-5 h-5 mr-2 text-purple-600" />
-                  AI Resume Formatter
+            <Card className="sticky top-6 border-slate-200 shadow-lg">
+              <CardHeader className="border-b border-slate-100 bg-gradient-to-b from-slate-50 to-white">
+                <CardTitle className="flex items-center text-slate-800">
+                  <div className="p-2 rounded-lg bg-indigo-100 mr-3">
+                    <Sparkles className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  AI Optimization
                 </CardTitle>
-                <CardDescription>
-                  {uploadedFile ? "Format your uploaded resume professionally" : "Upload a resume and paste a job description for AI formatting"}
+                <CardDescription className="text-slate-600">
+                  {uploadedFile ? "Your resume is ready for optimization" : "Upload a resume and paste a job description"}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="resumeTitle">Resume Title</Label>
+              <CardContent className="space-y-5 pt-5">
+                <div className="space-y-2">
+                  <Label htmlFor="resumeTitle" className="text-sm font-medium text-slate-700">Resume Title</Label>
                   <Input
                     id="resumeTitle"
                     placeholder="e.g., Software Engineer Resume"
                     value={resumeTitle}
                     onChange={(e) => setResumeTitle(e.target.value)}
+                    className="border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20"
                   />
                 </div>
                 
-                <div>
-                  <Label htmlFor="jobDescription">Job Description</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="jobDescription" className="text-sm font-medium text-slate-700">Target Job Description</Label>
                   <Textarea
                     id="jobDescription"
-                    placeholder="Paste the job description here..."
+                    placeholder="Paste the job description here for AI optimization..."
                     value={jobDescription}
                     onChange={(e) => setJobDescription(e.target.value)}
                     rows={8}
+                    className="border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 resize-none"
                   />
                 </div>
 
                 <Button
                   onClick={generateWithAI}
                   disabled={loading || aiLoading}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-5 shadow-md hover:shadow-lg transition-all"
                 >
-                  {loading || aiLoading ? "Formatting..." : "Format with AI"}
+                  {loading || aiLoading ? "Optimizing..." : "Optimize with AI"}
                   <Target className="w-4 h-4 ml-2" />
                 </Button>
 
-                <div className="flex space-x-2">
-                  <Button onClick={saveResume} variant="outline" className="flex-1">
+                <div className="grid grid-cols-2 gap-3">
+                  <Button onClick={saveResume} variant="outline" className="border-slate-300 hover:bg-slate-50">
                     <Save className="w-4 h-4 mr-2" />
                     Save
                   </Button>
@@ -374,7 +509,7 @@ Return the optimized data in the same JSON structure with improved formatting on
                       <Button 
                         onClick={generateLaTeXOutput}
                         variant="outline" 
-                        className="flex-1"
+                        className="border-slate-300 hover:bg-slate-50"
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         Preview
@@ -388,11 +523,11 @@ Return the optimized data in the same JSON structure with improved formatting on
                         </DialogDescription>
                       </DialogHeader>
                       <div className="mt-4">
-                        <pre className="bg-gray-100 p-4 rounded-lg text-xs overflow-x-auto">
-                          <code>{generatedLaTeX}</code>
+                        <pre className="bg-slate-50 border border-slate-200 p-4 rounded-lg text-xs overflow-x-auto">
+                          <code className="text-slate-700">{generatedLaTeX}</code>
                         </pre>
                         <div className="flex space-x-2 mt-4">
-                          <Button onClick={downloadLaTeX} className="flex-1">
+                          <Button onClick={downloadLaTeX} className="flex-1 bg-indigo-600 hover:bg-indigo-700">
                             <Download className="w-4 h-4 mr-2" />
                             Download LaTeX
                           </Button>
@@ -402,21 +537,19 @@ Return the optimized data in the same JSON structure with improved formatting on
                   </Dialog>
                 </div>
                 
-                <Button
-                  onClick={downloadLaTeX}
-                  variant="default"
-                  className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export Professional Resume
-                </Button>
+                <ExportOptions 
+                  resumeData={resumeData}
+                  resumeTitle={resumeTitle}
+                  className="w-full font-medium py-5"
+                />
               </CardContent>
             </Card>
           </div>
         </div>
 
         {/* Resume Form */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className={showPreview ? '' : 'lg:col-span-2'} style={{ gridColumn: showPreview ? 'span 1' : undefined }}>
+          <div className="space-y-6">
           {/* Personal Information */}
           <Card>
             <CardHeader>
@@ -650,7 +783,21 @@ Return the optimized data in the same JSON structure with improved formatting on
               ))}
             </CardContent>
           </Card>
+          </div>
         </div>
+
+        {/* Resume Preview Panel */}
+        {showPreview && (
+          <div className="hidden lg:block">
+            <div className="sticky top-6">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                <Eye className="w-5 h-5 mr-2 text-indigo-600" />
+                Live Preview
+              </h3>
+              <ResumePreview data={resumeData} className="shadow-xl" />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

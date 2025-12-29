@@ -160,42 +160,45 @@ const Index = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-800">
-        {/* Animated background elements */}
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+        {/* Subtle animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-32 w-96 h-96 bg-purple-500 rounded-full mix-blend-soft-light filter blur-3xl opacity-20 animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-blue-500 rounded-full mix-blend-soft-light filter blur-3xl opacity-20 animate-pulse animation-delay-2000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400 rounded-full mix-blend-soft-light filter blur-3xl opacity-15 animate-pulse animation-delay-4000"></div>
+          <div className="absolute -top-40 -right-32 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px]"></div>
+          <div className="absolute -bottom-40 -left-32 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[120px]"></div>
+          <div className="absolute top-1/3 left-1/2 w-[400px] h-[400px] bg-cyan-500/5 rounded-full blur-[100px]"></div>
         </div>
+        
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAyKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-50"></div>
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-5xl mx-auto">
-            <div className="inline-flex items-center gap-2 glass-effect rounded-full px-6 py-3 mb-8 animate-fade-in">
-              <Sparkles className="h-4 w-4 text-cyan-400" />
-              <span className="text-white/90 text-sm font-medium">Powered by Advanced AI Technology</span>
+            <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-5 py-2.5 mb-8">
+              <Sparkles className="h-4 w-4 text-indigo-400" />
+              <span className="text-slate-300 text-sm font-medium">Powered by Advanced AI Technology</span>
             </div>
             
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 text-white leading-tight animate-scale-in">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 text-white leading-[1.1]">
               Land Your Dream Job with
-              <span className="block text-gradient mt-2">
+              <span className="block mt-3 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                 AI-Powered Career Tools
               </span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-slate-300 mb-12 leading-relaxed max-w-3xl mx-auto animate-fade-in animation-delay-500">
+            <p className="text-xl md:text-2xl text-slate-400 mb-12 leading-relaxed max-w-3xl mx-auto font-light">
               Create compelling resumes, write persuasive cover letters, and ace interviews with our intelligent career platform.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in animation-delay-1000">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               {user ? (
                 <Link to="/resume">
-                  <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-primary-foreground px-10 py-6 text-lg font-semibold shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 hover:scale-105 border-0">
+                  <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-6 text-lg font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-[1.02] border-0 rounded-xl">
                     Get Started Now <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
               ) : (
                 <AuthDialog>
-                  <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-primary-foreground px-10 py-6 text-lg font-semibold shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 hover:scale-105 border-0">
+                  <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-6 text-lg font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-[1.02] border-0 rounded-xl">
                     Start Free Today <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </AuthDialog>
@@ -203,24 +206,24 @@ const Index = () => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="px-10 py-6 text-lg border-2 border-white/50 text-primary-foreground hover:bg-white/20 glass-effect transition-all duration-300 hover:scale-105 group shadow-lg hover:shadow-white/10"
+                className="px-8 py-6 text-lg border border-white/20 text-white hover:bg-white/10 bg-white/5 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] rounded-xl"
                 onClick={() => {
                   document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth' });
                 }}
               >
-                <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                <Play className="mr-2 h-5 w-5" />
                 Watch Demo
               </Button>
             </div>
             
-            <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 animate-fade-in animation-delay-1500">
+            <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center group">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl glass-effect mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <stat.icon className="h-8 w-8 text-white" />
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/5 border border-white/10 mb-4 group-hover:bg-white/10 transition-all duration-300">
+                    <stat.icon className="h-6 w-6 text-indigo-400" />
                   </div>
                   <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
-                  <div className="text-slate-300 text-sm">{stat.label}</div>
+                  <div className="text-slate-500 text-sm font-medium">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -256,40 +259,43 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" ref={featuresRef} className="py-24 bg-slate-50 relative overflow-hidden">
+      <section id="features" ref={featuresRef} className="py-28 bg-white relative overflow-hidden">
+        {/* Subtle gradient background */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
+        
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-800 rounded-full px-6 py-2 mb-6 font-medium border border-purple-200">
+            <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 rounded-full px-5 py-2 mb-6 font-medium text-sm border border-indigo-100">
               <Sparkles className="h-4 w-4" />
-              AI-Powered Tools
+              Real Scoring • Data-Driven Insights
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-800">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 leading-tight">
               Everything You Need to
-              <span className="block text-gradient">Land Your Dream Job</span>
+              <span className="block text-indigo-600 mt-2">Land Your Dream Job</span>
             </h2>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              Our comprehensive suite of AI-powered tools helps you stand out in today's competitive job market.
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+              Get real ATS scores, calculated metrics, and actionable feedback powered by advanced algorithms.
             </p>
           </div>
           
-          <div className="grid lg:grid-cols-3 gap-8 mb-20">
+          <div className="grid lg:grid-cols-3 gap-6 mb-20">
             {features.map((feature, index) => (
-              <Card key={index} className={`group hover:shadow-2xl transition-all duration-500 border-0 bg-gradient-to-br ${feature.bgGradient} hover:scale-105 overflow-hidden relative glass-effect border border-slate-200/50`}>
-                <CardHeader className="text-center pb-6 relative z-10">
-                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.gradient} mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+              <Card key={index} className={`group hover:shadow-xl transition-all duration-300 border border-slate-200 hover:border-indigo-200 bg-white hover:-translate-y-1 overflow-hidden`}>
+                <CardHeader className="text-center pb-4">
+                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} mb-5 mx-auto group-hover:scale-110 transition-all duration-300 shadow-lg`}>
                     <feature.icon className="h-8 w-8 text-white" />
                   </div>
-                  <CardTitle className="text-xl font-bold text-slate-800 mb-3">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl font-bold text-slate-900 mb-2">{feature.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="text-center relative z-10">
+                <CardContent className="text-center">
                   <CardDescription className="text-slate-600 mb-6 leading-relaxed">
                     {feature.description}
                   </CardDescription>
                   
                   {user && (
-                    <div className="mb-4 p-3 glass-effect rounded-lg border border-slate-200/50">
-                      <div className="text-sm text-slate-600 mb-1">Available Tokens</div>
-                      <div className="text-lg font-bold text-slate-800">
+                    <div className="mb-5 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                      <div className="text-xs text-slate-500 mb-1 font-medium uppercase tracking-wide">Available Tokens</div>
+                      <div className="text-2xl font-bold text-indigo-600">
                         {getTokenCount(feature.tokenType)}/{getTotalTokens(feature.tokenType)}
                       </div>
                     </div>
@@ -297,14 +303,16 @@ const Index = () => {
                   
                   {user ? (
                     <Link to={feature.href}>
-                      <Button className={`w-full bg-gradient-to-r ${feature.gradient} hover:shadow-lg transition-all duration-300 text-white font-semibold py-3`}>
-                        Generate AI <ChevronRight className="ml-2 h-4 w-4" />
+                      <Button className={`w-full bg-gradient-to-r ${feature.gradient} hover:opacity-90 transition-all duration-300 text-white font-semibold py-5 rounded-xl`}>
+                        Get Started
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </Link>
                   ) : (
                     <AuthDialog>
-                      <Button className={`w-full bg-gradient-to-r ${feature.gradient} hover:shadow-lg transition-all duration-300 text-white font-semibold py-3`}>
-                        Get Started <ChevronRight className="ml-2 h-4 w-4" />
+                      <Button className={`w-full bg-gradient-to-r ${feature.gradient} hover:opacity-90 transition-all duration-300 text-white font-semibold py-5 rounded-xl`}>
+                        Try Free
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </AuthDialog>
                   )}
