@@ -165,19 +165,84 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
         }
       } catch (parseError) {
         console.error("Failed to parse AI response:", parseError);
-        toast({
-          title: "Partial Parse",
-          description: "Could not auto-fill some fields. Please fill them manually.",
-          variant: "default",
-        });
+        
+        // Fallback: Try to extract basic info from raw text using regex
+        try {
+          const emailMatch = text.match(/[\w.-]+@[\w.-]+\.\w+/);
+          const phoneMatch = text.match(/[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}/);
+          const linkedinMatch = text.match(/linkedin\.com\/in\/[\w-]+/i);
+          
+          // Try to get name from first line
+          const lines = text.split('\n').filter(l => l.trim());
+          const possibleName = lines[0]?.trim();
+          const isName = possibleName && possibleName.length < 50 && /^[A-Z][a-z]+ [A-Z][a-z]+/.test(possibleName);
+          
+          if (emailMatch || phoneMatch || isName) {
+            setResumeData(prev => ({
+              ...prev,
+              personalInfo: {
+                ...prev.personalInfo,
+                fullName: isName ? possibleName : prev.personalInfo.fullName,
+                email: emailMatch ? emailMatch[0] : prev.personalInfo.email,
+                phone: phoneMatch ? phoneMatch[0] : prev.personalInfo.phone,
+                linkedin: linkedinMatch ? `https://${linkedinMatch[0]}` : prev.personalInfo.linkedin,
+              },
+            }));
+            
+            toast({
+              title: "Basic Info Extracted",
+              description: "Some fields auto-filled. Please complete the rest.",
+            });
+          } else {
+            toast({
+              title: "Manual Entry Needed",
+              description: "Please fill in your information manually.",
+              variant: "default",
+            });
+          }
+        } catch (fallbackError) {
+          toast({
+            title: "Manual Entry Needed",
+            description: "Please fill in the form manually.",
+            variant: "default",
+          });
+        }
       }
     } catch (error) {
       console.error("AI parsing error:", error);
-      toast({
-        title: "Parse Failed",
-        description: "Could not parse resume. Please fill the form manually.",
-        variant: "destructive",
-      });
+      
+      // Even on complete failure, try basic regex extraction
+      try {
+        const emailMatch = text.match(/[\w.-]+@[\w.-]+\.\w+/);
+        const phoneMatch = text.match(/[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}/);
+        
+        if (emailMatch || phoneMatch) {
+          setResumeData(prev => ({
+            ...prev,
+            personalInfo: {
+              ...prev.personalInfo,
+              email: emailMatch ? emailMatch[0] : prev.personalInfo.email,
+              phone: phoneMatch ? phoneMatch[0] : prev.personalInfo.phone,
+            },
+          }));
+          toast({
+            title: "Basic Info Found",
+            description: "Email/phone extracted. Please fill remaining fields.",
+          });
+        } else {
+          toast({
+            title: "Parse Failed",
+            description: "Please fill the form manually.",
+            variant: "destructive",
+          });
+        }
+      } catch (e) {
+        toast({
+          title: "Parse Failed", 
+          description: "Please fill the form manually.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsParsing(false);
     }
