@@ -14,6 +14,7 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { useAI } from "@/hooks/useAI";
 import { ResumeUpload } from "./ResumeUpload";
 import { ResumePreview } from "./ResumePreview";
+import { LaTeXPreview } from "./LaTeXPreview";
 import { ExportOptions } from "./ExportOptions";
 import { generateLaTeXResume } from "./LaTeXGenerator";
 import { generateLaTeXFromTemplate, suggestTemplate, TEMPLATE_OPTIONS, TemplateId } from "./LaTeXTemplates";
@@ -1296,17 +1297,22 @@ IMPORTANT: Extract EVERYTHING from the resume. Include all experiences, all proj
                   <span className="text-sm text-indigo-700">AI is optimizing your resume...</span>
                 </div>
               )}
-              
-              <ResumePreview data={resumeData} className="shadow-xl" />
+              {/* Live LaTeX Preview */}
+              <LaTeXPreview 
+                latex={liveLaTeX} 
+                className="shadow-xl"
+                showCode={showLaTeXPreview}
+                onToggleCode={() => setShowLaTeXPreview(!showLaTeXPreview)}
+              />
               
               {/* LaTeX Code Info */}
               <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
                 <p className="text-xs text-slate-500">
                   <Code className="w-3 h-3 inline mr-1" />
                   {hasUploadedResume ? (
-                    <>LaTeX code is generated to match <strong>your original resume format</strong>. Click "View LaTeX" to see and download.</>
+                    <>LaTeX code is generated to match <strong>your original resume format</strong>. Click "View LaTeX" to see the code.</>
                   ) : (
-                    <>LaTeX code is generated using the <strong>{TEMPLATE_OPTIONS.find(t => t.id === selectedTemplate)?.name}</strong> template. Click "View LaTeX" to see and download.</>
+                    <>LaTeX code is generated using the <strong>{TEMPLATE_OPTIONS.find(t => t.id === selectedTemplate)?.name}</strong> template. Click "View LaTeX" to see the code.</>
                   )}
                 </p>
               </div>
