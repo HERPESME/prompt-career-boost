@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { FileText, Sparkles, Save, Download, Target, Code, Eye, PanelLeftClose, PanelLeft } from "lucide-react";
+import { FileText, Sparkles, Save, Download, Target, Code, Eye, PanelLeftClose, PanelLeft, Palette, Loader2 } from "lucide-react";
 import { useSecureTokens } from "@/hooks/useSecureTokens";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useAI } from "@/hooks/useAI";
@@ -16,7 +16,9 @@ import { ResumeUpload } from "./ResumeUpload";
 import { ResumePreview } from "./ResumePreview";
 import { ExportOptions } from "./ExportOptions";
 import { generateLaTeXResume } from "./LaTeXGenerator";
+import { generateLaTeXFromTemplate, suggestTemplate, TEMPLATE_OPTIONS, TemplateId } from "./LaTeXTemplates";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export interface ResumeData {
   personalInfo: {
@@ -74,6 +76,21 @@ export const ResumeBuilder = () => {
   const [showLaTeXPreview, setShowLaTeXPreview] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [isParsing, setIsParsing] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>('modern');
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [liveLaTeX, setLiveLaTeX] = useState("");
+
+  // Generate live LaTeX whenever resumeData or template changes
+  const currentLaTeX = useMemo(() => {
+    return generateLaTeXFromTemplate(selectedTemplate, resumeData);
+  }, [resumeData, selectedTemplate]);
+
+  // Update liveLaTeX when currentLaTeX changes (unless manually optimized)
+  useEffect(() => {
+    if (!isOptimizing) {
+      setLiveLaTeX(currentLaTeX);
+    }
+  }, [currentLaTeX, isOptimizing]);
 
   const handleResumeUpload = async (file: File, text: string) => {
     setUploadedFile(file);
@@ -159,6 +176,14 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
           toast({
             title: "Resume Parsed Successfully!",
             description: "Form fields have been auto-filled. Review and add your target job description.",
+          });
+
+          // Auto-suggest best template based on content
+          const suggestedTemplate = suggestTemplate(parsedData, text);
+          setSelectedTemplate(suggestedTemplate);
+          toast({
+            title: `Template Selected: ${TEMPLATE_OPTIONS.find(t => t.id === suggestedTemplate)?.name}`,
+            description: "You can change this in the template selector.",
           });
         } else {
           throw new Error("Invalid parsed structure");
@@ -279,57 +304,97 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
     }
 
     setLoading(true);
+    setIsOptimizing(true);
+    
     try {
-      let contentToOptimize = JSON.stringify(resumeData);
+      // Get the current live LaTeX code
+      const currentLatexCode = liveLaTeX || currentLaTeX;
       
-      // If user uploaded a resume, include that context
-      if (uploadedFile && extractedText) {
-        contentToOptimize = `Original Resume: ${extractedText}\n\nForm Data: ${JSON.stringify(resumeData)}`;
-      }
-
-      // First, analyze the resume
-      const analysis = await analyzeResume(contentToOptimize, jobDescription);
+      // First, analyze the resume for ATS score
+      const analysis = await analyzeResume(currentLatexCode, jobDescription);
       setAtsScore(analysis.score);
 
-      // Then, generate optimized content while preserving original information
-      const optimizationPrompt = `Based on this job description and resume data, optimize ONLY the formatting and presentation while keeping ALL original content and information exactly the same:
+      // Now optimize the LaTeX code directly
+      const optimizationPrompt = `You are an expert resume optimizer. Optimize the following LaTeX resume to better match the job description while strictly following these rules:
 
 JOB DESCRIPTION:
 ${jobDescription}
 
-CURRENT RESUME DATA:
-${contentToOptimize}
+CURRENT LATEX RESUME:
+${currentLatexCode}
 
-IMPORTANT INSTRUCTIONS:
-- DO NOT change any personal information, company names, positions, dates, or achievements
-- DO NOT add fake information or experiences
-- ONLY improve the wording, formatting, and presentation of existing content
-- Keep all technical skills, education details, and experience descriptions as provided
-- Focus on ATS optimization by improving keyword placement and formatting
-- Enhance bullet points for better readability while maintaining truthfulness
-- Preserve all dates, durations, and factual information exactly as given
-- The goal is to reach 90%+ ATS score through better presentation, not content changes
+OPTIMIZATION RULES:
+1. PRESERVE the exact LaTeX structure, formatting, and template style
+2. DO NOT change personal information (name, email, phone, etc.)
+3. DO NOT invent fake experiences, companies, or achievements
+4. IMPROVE the wording and bullet points to better match job requirements
+5. ADD relevant keywords from the job description naturally into existing content
+6. ENHANCE achievement descriptions with stronger action verbs
+7. ENSURE all LaTeX commands remain valid and properly escaped
+8. Focus on ATS optimization by:
+   - Using exact keywords from the job description
+   - Quantifying achievements where possible
+   - Improving readability and scannability
 
-Return the optimized data in the same JSON structure with improved formatting only.`;
+Return ONLY the optimized LaTeX code, no explanations.`;
 
-      const optimizedContent = await generateAIResponse(optimizationPrompt, 'resume');
+      const optimizedLaTeX = await generateAIResponse(optimizationPrompt, 'resume');
       
-      try {
-        // Try to parse the AI response as JSON
-        const parsedOptimization = JSON.parse(optimizedContent);
-        if (parsedOptimization.personalInfo) {
-          // Only update if the structure is valid and content is preserved
-          setResumeData(parsedOptimization);
+      // Validate that we got valid LaTeX back
+      if (optimizedLaTeX && optimizedLaTeX.includes('\\documentclass') && optimizedLaTeX.includes('\\begin{document}')) {
+        setLiveLaTeX(optimizedLaTeX);
+        setGeneratedLaTeX(optimizedLaTeX);
+        
+        // Re-analyze after optimization
+        const postOptimizationAnalysis = await analyzeResume(optimizedLaTeX, jobDescription);
+        setAtsScore(postOptimizationAnalysis.score);
+        
+        toast({
+          title: "Resume Optimized!",
+          description: `Your resume has been optimized for ATS with a score of ${postOptimizationAnalysis.score}%`,
+        });
+      } else {
+        // Fallback: keep original but update form data
+        console.log('AI response was not valid LaTeX, falling back to form optimization');
+        
+        // Try to extract improvements from AI and apply to form
+        const formOptimizationPrompt = `Based on this job description, optimize the resume content and return as JSON:
+
+JOB DESCRIPTION:
+${jobDescription}
+
+RESUME DATA:
+${JSON.stringify(resumeData)}
+
+Return improved resume data in the same JSON format. Only improve wording and add relevant keywords. Do not change personal info or add fake experiences.`;
+
+        const optimizedContent = await generateAIResponse(formOptimizationPrompt, 'resume');
+        
+        try {
+          let cleanedResponse = optimizedContent.trim();
+          if (cleanedResponse.startsWith('\`\`\`json')) {
+            cleanedResponse = cleanedResponse.slice(7);
+          } else if (cleanedResponse.startsWith('\`\`\`')) {
+            cleanedResponse = cleanedResponse.slice(3);
+          }
+          if (cleanedResponse.endsWith('\`\`\`')) {
+            cleanedResponse = cleanedResponse.slice(0, -3);
+          }
+          cleanedResponse = cleanedResponse.trim();
+          
+          const parsedOptimization = JSON.parse(cleanedResponse);
+          if (parsedOptimization.personalInfo) {
+            setResumeData(parsedOptimization);
+          }
+        } catch (parseError) {
+          console.log('Form optimization parsing failed, keeping original data');
         }
-      } catch (parseError) {
-        console.log('AI response not in JSON format, using original data with improvements');
-        // Keep original data if parsing fails
+        
+        toast({
+          title: "Resume Formatting Optimized!",
+          description: `Your resume has been formatted for better ATS compatibility with a score of ${analysis.score}%`,
+        });
       }
-      
-      toast({
-        title: "Resume Formatting Optimized!",
-        description: `Your resume has been formatted for better ATS compatibility with a score of ${analysis.score}%`,
-      });
     } catch (error: any) {
       console.error("AI optimization error:", error);
       toast({
@@ -339,11 +404,12 @@ Return the optimized data in the same JSON structure with improved formatting on
       });
     } finally {
       setLoading(false);
+      setIsOptimizing(false);
     }
   };
 
   const generateLaTeXOutput = () => {
-    const latex = generateLaTeXResume(resumeData);
+    const latex = liveLaTeX || generateLaTeXFromTemplate(selectedTemplate, resumeData);
     setGeneratedLaTeX(latex);
     setShowLaTeXPreview(true);
   };
@@ -473,6 +539,28 @@ Return the optimized data in the same JSON structure with improved formatting on
           <p className="text-slate-600 mt-1">Create an ATS-optimized resume tailored to your target role</p>
         </div>
         <div className="flex items-center gap-4">
+          {/* Template Selector */}
+          <div className="flex items-center gap-2">
+            <Label htmlFor="template-select" className="text-sm font-medium text-slate-600 whitespace-nowrap">
+              <Palette className="w-4 h-4 inline mr-1" />
+              Template:
+            </Label>
+            <Select value={selectedTemplate} onValueChange={(value: TemplateId) => setSelectedTemplate(value)}>
+              <SelectTrigger className="w-[180px] border-slate-300">
+                <SelectValue placeholder="Select template" />
+              </SelectTrigger>
+              <SelectContent>
+                {TEMPLATE_OPTIONS.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{template.name}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Preview Toggle */}
           <Button 
             variant="outline" 
@@ -855,11 +943,45 @@ Return the optimized data in the same JSON structure with improved formatting on
         {showPreview && (
           <div className="hidden lg:block">
             <div className="sticky top-6">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                <Eye className="w-5 h-5 mr-2 text-indigo-600" />
-                Live Preview
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-800 flex items-center">
+                  <Eye className="w-5 h-5 mr-2 text-indigo-600" />
+                  Live Preview
+                </h3>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {TEMPLATE_OPTIONS.find(t => t.id === selectedTemplate)?.name}
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={generateLaTeXOutput}
+                    className="text-xs"
+                  >
+                    <Code className="w-3 h-3 mr-1" />
+                    View LaTeX
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Show optimization status */}
+              {isOptimizing && (
+                <div className="flex items-center gap-2 mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                  <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                  <span className="text-sm text-indigo-700">AI is optimizing your resume...</span>
+                </div>
+              )}
+              
               <ResumePreview data={resumeData} className="shadow-xl" />
+              
+              {/* LaTeX Code Info */}
+              <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <p className="text-xs text-slate-500">
+                  <Code className="w-3 h-3 inline mr-1" />
+                  LaTeX code is generated live from your data using the <strong>{TEMPLATE_OPTIONS.find(t => t.id === selectedTemplate)?.name}</strong> template.
+                  Click "View LaTeX" to see and download the code.
+                </p>
+              </div>
             </div>
           </div>
         )}
