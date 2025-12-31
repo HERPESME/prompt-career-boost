@@ -28,20 +28,59 @@ export interface ResumeData {
     location: string;
     linkedin: string;
     portfolio: string;
+    github?: string;
+    website?: string;
   };
   summary: string;
   experience: Array<{
     company: string;
     position: string;
     duration: string;
+    location?: string;
     description: string;
   }>;
   education: Array<{
     institution: string;
     degree: string;
+    field?: string;
     year: string;
+    gpa?: string;
+    achievements?: string;
   }>;
   skills: string[];
+  projects: Array<{
+    name: string;
+    description: string;
+    technologies?: string;
+    link?: string;
+    duration?: string;
+  }>;
+  achievements: Array<{
+    title: string;
+    description: string;
+    date?: string;
+  }>;
+  certifications: Array<{
+    name: string;
+    issuer: string;
+    date?: string;
+    credentialId?: string;
+  }>;
+  languages: Array<{
+    language: string;
+    proficiency: string;
+  }>;
+  publications?: Array<{
+    title: string;
+    journal?: string;
+    date?: string;
+    link?: string;
+  }>;
+  courses?: Array<{
+    name: string;
+    platform?: string;
+    date?: string;
+  }>;
 }
 
 export const ResumeBuilder = () => {
@@ -57,11 +96,17 @@ export const ResumeBuilder = () => {
       location: "",
       linkedin: "",
       portfolio: "",
+      github: "",
+      website: "",
     },
     summary: "",
     experience: [{ company: "", position: "", duration: "", description: "" }],
     education: [{ institution: "", degree: "", year: "" }],
     skills: [],
+    projects: [],
+    achievements: [],
+    certifications: [],
+    languages: [],
   });
   
   const [jobDescription, setJobDescription] = useState("");
@@ -134,7 +179,7 @@ export const ResumeBuilder = () => {
 
     try {
       // Use AI to parse the resume text into structured data
-      const parsePrompt = `Parse this resume text and extract the information into a JSON structure. Be accurate and only extract information that is explicitly present in the resume. If a field is not found, leave it as an empty string or empty array.
+      const parsePrompt = `Parse this resume text and extract ALL information into a JSON structure. Be thorough and extract every section present. If a field is not found, leave it as an empty string or empty array.
 
 RESUME TEXT:
 ${text}
@@ -147,7 +192,9 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
     "phone": "",
     "location": "",
     "linkedin": "",
-    "portfolio": ""
+    "portfolio": "",
+    "github": "",
+    "website": ""
   },
   "summary": "",
   "experience": [
@@ -155,18 +202,54 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
       "company": "",
       "position": "",
       "duration": "",
-      "description": ""
+      "location": "",
+      "description": "Include ALL bullet points and achievements here as a single text"
     }
   ],
   "education": [
     {
       "institution": "",
       "degree": "",
-      "year": ""
+      "field": "",
+      "year": "",
+      "gpa": "",
+      "achievements": ""
     }
   ],
-  "skills": []
-}`;
+  "skills": [],
+  "projects": [
+    {
+      "name": "",
+      "description": "",
+      "technologies": "",
+      "link": "",
+      "duration": ""
+    }
+  ],
+  "achievements": [
+    {
+      "title": "",
+      "description": "",
+      "date": ""
+    }
+  ],
+  "certifications": [
+    {
+      "name": "",
+      "issuer": "",
+      "date": "",
+      "credentialId": ""
+    }
+  ],
+  "languages": [
+    {
+      "language": "",
+      "proficiency": ""
+    }
+  ]
+}
+
+IMPORTANT: Extract EVERYTHING from the resume. Include all experiences, all projects, all achievements, all certifications, all languages. Do not skip any section.`;
 
       const response = await generateAIResponse(parsePrompt, 'resume');
       
@@ -195,6 +278,8 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
               location: parsedData.personalInfo?.location || resumeData.personalInfo.location,
               linkedin: parsedData.personalInfo?.linkedin || resumeData.personalInfo.linkedin,
               portfolio: parsedData.personalInfo?.portfolio || resumeData.personalInfo.portfolio,
+              github: parsedData.personalInfo?.github || resumeData.personalInfo.github,
+              website: parsedData.personalInfo?.website || resumeData.personalInfo.website,
             },
             summary: parsedData.summary || resumeData.summary,
             experience: Array.isArray(parsedData.experience) && parsedData.experience.length > 0 
@@ -206,6 +291,18 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
             skills: Array.isArray(parsedData.skills) && parsedData.skills.length > 0
               ? parsedData.skills
               : resumeData.skills,
+            projects: Array.isArray(parsedData.projects) && parsedData.projects.length > 0
+              ? parsedData.projects.filter((p: any) => p.name || p.description)
+              : resumeData.projects,
+            achievements: Array.isArray(parsedData.achievements) && parsedData.achievements.length > 0
+              ? parsedData.achievements.filter((a: any) => a.title || a.description)
+              : resumeData.achievements,
+            certifications: Array.isArray(parsedData.certifications) && parsedData.certifications.length > 0
+              ? parsedData.certifications.filter((c: any) => c.name)
+              : resumeData.certifications,
+            languages: Array.isArray(parsedData.languages) && parsedData.languages.length > 0
+              ? parsedData.languages.filter((l: any) => l.language)
+              : resumeData.languages,
           };
           
           setResumeData(mergedData);
@@ -936,6 +1033,221 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
               ))}
             </CardContent>
           </Card>
+
+          {/* Projects */}
+          {resumeData.projects.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Projects</CardTitle>
+                  <Button onClick={() => setResumeData(prev => ({
+                    ...prev,
+                    projects: [...prev.projects, { name: "", description: "", technologies: "", link: "" }]
+                  }))} variant="outline" size="sm">
+                    Add Project
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {resumeData.projects.map((project, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg">
+                    <div>
+                      <Label>Project Name</Label>
+                      <Input
+                        value={project.name}
+                        onChange={(e) => {
+                          const newProjects = [...resumeData.projects];
+                          newProjects[index].name = e.target.value;
+                          setResumeData(prev => ({ ...prev, projects: newProjects }));
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label>Technologies</Label>
+                      <Input
+                        value={project.technologies || ""}
+                        onChange={(e) => {
+                          const newProjects = [...resumeData.projects];
+                          newProjects[index].technologies = e.target.value;
+                          setResumeData(prev => ({ ...prev, projects: newProjects }));
+                        }}
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label>Description</Label>
+                      <Textarea
+                        value={project.description}
+                        onChange={(e) => {
+                          const newProjects = [...resumeData.projects];
+                          newProjects[index].description = e.target.value;
+                          setResumeData(prev => ({ ...prev, projects: newProjects }));
+                        }}
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Achievements */}
+          {resumeData.achievements.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Achievements</CardTitle>
+                  <Button onClick={() => setResumeData(prev => ({
+                    ...prev,
+                    achievements: [...prev.achievements, { title: "", description: "", date: "" }]
+                  }))} variant="outline" size="sm">
+                    Add Achievement
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {resumeData.achievements.map((achievement, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg">
+                    <div>
+                      <Label>Title</Label>
+                      <Input
+                        value={achievement.title}
+                        onChange={(e) => {
+                          const newAchievements = [...resumeData.achievements];
+                          newAchievements[index].title = e.target.value;
+                          setResumeData(prev => ({ ...prev, achievements: newAchievements }));
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label>Date</Label>
+                      <Input
+                        value={achievement.date || ""}
+                        onChange={(e) => {
+                          const newAchievements = [...resumeData.achievements];
+                          newAchievements[index].date = e.target.value;
+                          setResumeData(prev => ({ ...prev, achievements: newAchievements }));
+                        }}
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label>Description</Label>
+                      <Textarea
+                        value={achievement.description}
+                        onChange={(e) => {
+                          const newAchievements = [...resumeData.achievements];
+                          newAchievements[index].description = e.target.value;
+                          setResumeData(prev => ({ ...prev, achievements: newAchievements }));
+                        }}
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Certifications */}
+          {resumeData.certifications.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Certifications</CardTitle>
+                  <Button onClick={() => setResumeData(prev => ({
+                    ...prev,
+                    certifications: [...prev.certifications, { name: "", issuer: "", date: "" }]
+                  }))} variant="outline" size="sm">
+                    Add Certification
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {resumeData.certifications.map((cert, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg">
+                    <div>
+                      <Label>Certification Name</Label>
+                      <Input
+                        value={cert.name}
+                        onChange={(e) => {
+                          const newCerts = [...resumeData.certifications];
+                          newCerts[index].name = e.target.value;
+                          setResumeData(prev => ({ ...prev, certifications: newCerts }));
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label>Issuer</Label>
+                      <Input
+                        value={cert.issuer}
+                        onChange={(e) => {
+                          const newCerts = [...resumeData.certifications];
+                          newCerts[index].issuer = e.target.value;
+                          setResumeData(prev => ({ ...prev, certifications: newCerts }));
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label>Date</Label>
+                      <Input
+                        value={cert.date || ""}
+                        onChange={(e) => {
+                          const newCerts = [...resumeData.certifications];
+                          newCerts[index].date = e.target.value;
+                          setResumeData(prev => ({ ...prev, certifications: newCerts }));
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Languages */}
+          {resumeData.languages.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Languages</CardTitle>
+                  <Button onClick={() => setResumeData(prev => ({
+                    ...prev,
+                    languages: [...prev.languages, { language: "", proficiency: "" }]
+                  }))} variant="outline" size="sm">
+                    Add Language
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {resumeData.languages.map((lang, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg">
+                    <div>
+                      <Label>Language</Label>
+                      <Input
+                        value={lang.language}
+                        onChange={(e) => {
+                          const newLangs = [...resumeData.languages];
+                          newLangs[index].language = e.target.value;
+                          setResumeData(prev => ({ ...prev, languages: newLangs }));
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label>Proficiency</Label>
+                      <Input
+                        value={lang.proficiency}
+                        onChange={(e) => {
+                          const newLangs = [...resumeData.languages];
+                          newLangs[index].proficiency = e.target.value;
+                          setResumeData(prev => ({ ...prev, languages: newLangs }));
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
           </div>
         </div>
 
