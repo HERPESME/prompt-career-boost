@@ -155,6 +155,135 @@ Please provide:
   };
 
   /**
+   * Reconstruct LaTeX code from uploaded resume text
+   * Analyzes the PDF structure and generates matching LaTeX
+   */
+  const reconstructLaTeX = async (
+    extractedText: string,
+    parsedData: {
+      personalInfo: { fullName: string; email: string; phone: string; location: string; linkedin: string; portfolio: string };
+      summary: string;
+      experience: Array<{ company: string; position: string; duration: string; description: string }>;
+      education: Array<{ institution: string; degree: string; year: string }>;
+      skills: string[];
+    }
+  ): Promise<{ latex: string; success: boolean }> => {
+    setLoading(true);
+    console.log('🔨 Reconstructing LaTeX from PDF:', {
+      textLength: extractedText.length,
+      hasExperience: parsedData.experience.length > 0,
+      hasEducation: parsedData.education.length > 0,
+      timestamp: new Date().toISOString()
+    });
+
+    try {
+      const reconstructionPrompt = `You are an expert LaTeX resume designer. Analyze the following resume text and create LaTeX code that EXACTLY replicates its visual format and structure.
+
+ORIGINAL RESUME TEXT (extracted from PDF):
+${extractedText}
+
+PARSED DATA (use these exact values):
+${JSON.stringify(parsedData, null, 2)}
+
+CRITICAL REQUIREMENTS:
+1. ANALYZE the original resume's visual structure:
+   - Section order (e.g., Summary first? Experience first? Skills at top?)
+   - Formatting style (bullet points, paragraphs, tables)
+   - Header layout (name centered? contact info on one line or multiple?)
+   - Section headers style (underlined? bold? capitalized?)
+   
+2. CREATE LaTeX code that REPLICATES this exact structure
+   - Use the same section order as the original
+   - Match the formatting style (bullets vs paragraphs)
+   - Match the header layout
+   - Keep the same visual hierarchy
+
+3. USE the parsed data values EXACTLY - don't change any content
+   - Personal info: ${parsedData.personalInfo.fullName}, ${parsedData.personalInfo.email}, etc.
+   - All experience entries with their exact descriptions
+   - All education entries
+   - All skills
+
+4. ENSURE valid, compilable LaTeX:
+   - Start with \\documentclass
+   - Include necessary packages
+   - Proper escaping of special characters (&, %, $, #, _, {, })
+   - End with \\end{document}
+
+5. STRUCTURE the LaTeX with clear comments marking each section for easy field updates later
+
+OUTPUT: Return ONLY the complete LaTeX code. No explanations, no markdown code blocks. Just raw LaTeX starting with % or \\documentclass.`;
+
+      const reconstructedLaTeX = await generateAIResponse(reconstructionPrompt, 'resume');
+      
+      // Clean up response
+      let cleanedLaTeX = reconstructedLaTeX.trim();
+      if (cleanedLaTeX.startsWith('\`\`\`latex')) {
+        cleanedLaTeX = cleanedLaTeX.slice(8);
+      } else if (cleanedLaTeX.startsWith('\`\`\`')) {
+        cleanedLaTeX = cleanedLaTeX.slice(3);
+      }
+      if (cleanedLaTeX.endsWith('\`\`\`')) {
+        cleanedLaTeX = cleanedLaTeX.slice(0, -3);
+      }
+      cleanedLaTeX = cleanedLaTeX.trim();
+      
+      // Validate LaTeX
+      const isValidLaTeX = cleanedLaTeX.includes('\\documentclass') || 
+                          cleanedLaTeX.includes('\\begin{document}') ||
+                          cleanedLaTeX.startsWith('%');
+      
+      if (!isValidLaTeX) {
+        console.warn('⚠️ Reconstructed LaTeX may be invalid');
+        return { latex: '', success: false };
+      }
+
+      console.log('✅ LaTeX reconstruction completed:', {
+        latexLength: cleanedLaTeX.length,
+        hasDocumentClass: cleanedLaTeX.includes('\\documentclass'),
+        timestamp: new Date().toISOString()
+      });
+
+      return { latex: cleanedLaTeX, success: true };
+    } catch (error) {
+      console.error('❌ LaTeX reconstruction error:', error);
+      return { latex: '', success: false };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Update specific fields in reconstructed LaTeX code
+   * Preserves the original structure while replacing field values
+   */
+  const updateLaTeXFields = (
+    latexCode: string,
+    fieldType: 'personalInfo' | 'summary' | 'experience' | 'education' | 'skills',
+    fieldKey: string,
+    newValue: string,
+    index?: number
+  ): string => {
+    // Escape special LaTeX characters in the new value
+    const escapeLatex = (text: string): string => {
+      if (!text) return '';
+      return text
+        .replace(/\\/g, '\\textbackslash{}')
+        .replace(/[&%$#_{}]/g, '\\$&')
+        .replace(/~/g, '\\textasciitilde{}')
+        .replace(/\^/g, '\\textasciicircum{}');
+    };
+    
+    const escapedValue = escapeLatex(newValue);
+    
+    // This is a simplified approach - in practice, we'd need more sophisticated parsing
+    // For now, we'll regenerate the LaTeX when fields change
+    console.log('📝 Field update requested:', { fieldType, fieldKey, index });
+    
+    return latexCode; // Return unchanged for now - full update happens via regeneration
+  };
+
+  /**
    * Optimize LaTeX resume code with AI
    * Preserves template structure while improving content for ATS
    */
@@ -302,6 +431,8 @@ RESPOND WITH ONLY A NUMBER FROM 0-100. Nothing else.`;
   return {
     generateAIResponse,
     analyzeResume,
+    reconstructLaTeX,
+    updateLaTeXFields,
     optimizeLaTeX,
     calculateATSScore,
     loading

@@ -47,7 +47,7 @@ export interface ResumeData {
 export const ResumeBuilder = () => {
   const { user } = useAuthUser();
   const { useToken } = useSecureTokens();
-  const { analyzeResume, generateAIResponse, optimizeLaTeX, loading: aiLoading } = useAI();
+  const { analyzeResume, generateAIResponse, optimizeLaTeX, reconstructLaTeX, loading: aiLoading } = useAI();
   
   const [resumeData, setResumeData] = useState<ResumeData>({
     personalInfo: {
@@ -79,18 +79,53 @@ export const ResumeBuilder = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>('modern');
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [liveLaTeX, setLiveLaTeX] = useState("");
+  const [originalLaTeX, setOriginalLaTeX] = useState(""); // Reconstructed from user's uploaded PDF
+  const [hasUploadedResume, setHasUploadedResume] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   // Generate live LaTeX whenever resumeData or template changes
+  // If user uploaded a resume, regenerate from their original format
   const currentLaTeX = useMemo(() => {
+    if (hasUploadedResume && originalLaTeX) {
+      // When user has uploaded resume, use the stored original LaTeX
+      // Updates happen via the regeneration effect below
+      return liveLaTeX || originalLaTeX;
+    }
     return generateLaTeXFromTemplate(selectedTemplate, resumeData);
-  }, [resumeData, selectedTemplate]);
+  }, [resumeData, selectedTemplate, hasUploadedResume, originalLaTeX, liveLaTeX]);
+
+  // Regenerate LaTeX when user edits fields (only if they've uploaded a resume)
+  useEffect(() => {
+    const regenerateWithUpdatedData = async () => {
+      if (!hasUploadedResume || !extractedText || isOptimizing || isRegenerating) return;
+      
+      // Debounce by checking if we should regenerate
+      setIsRegenerating(true);
+      
+      try {
+        const result = await reconstructLaTeX(extractedText, resumeData);
+        if (result.success && result.latex) {
+          setLiveLaTeX(result.latex);
+          setOriginalLaTeX(result.latex);
+        }
+      } catch (error) {
+        console.error('Failed to regenerate LaTeX:', error);
+      } finally {
+        setIsRegenerating(false);
+      }
+    };
+    
+    // Use a debounce timer to avoid too frequent regeneration
+    const timer = setTimeout(regenerateWithUpdatedData, 1000);
+    return () => clearTimeout(timer);
+  }, [resumeData]); // Only trigger when resumeData changes
 
   // Update liveLaTeX when currentLaTeX changes (unless manually optimized)
   useEffect(() => {
-    if (!isOptimizing) {
+    if (!isOptimizing && !isRegenerating && !hasUploadedResume) {
       setLiveLaTeX(currentLaTeX);
     }
-  }, [currentLaTeX, isOptimizing]);
+  }, [currentLaTeX, isOptimizing, isRegenerating, hasUploadedResume]);
 
   const handleResumeUpload = async (file: File, text: string) => {
     setUploadedFile(file);
@@ -152,39 +187,66 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
         
         // Validate and merge with existing structure
         if (parsedData.personalInfo || parsedData.experience || parsedData.education || parsedData.skills) {
-          setResumeData(prev => ({
+          const mergedData = {
             personalInfo: {
-              fullName: parsedData.personalInfo?.fullName || prev.personalInfo.fullName,
-              email: parsedData.personalInfo?.email || prev.personalInfo.email,
-              phone: parsedData.personalInfo?.phone || prev.personalInfo.phone,
-              location: parsedData.personalInfo?.location || prev.personalInfo.location,
-              linkedin: parsedData.personalInfo?.linkedin || prev.personalInfo.linkedin,
-              portfolio: parsedData.personalInfo?.portfolio || prev.personalInfo.portfolio,
+              fullName: parsedData.personalInfo?.fullName || resumeData.personalInfo.fullName,
+              email: parsedData.personalInfo?.email || resumeData.personalInfo.email,
+              phone: parsedData.personalInfo?.phone || resumeData.personalInfo.phone,
+              location: parsedData.personalInfo?.location || resumeData.personalInfo.location,
+              linkedin: parsedData.personalInfo?.linkedin || resumeData.personalInfo.linkedin,
+              portfolio: parsedData.personalInfo?.portfolio || resumeData.personalInfo.portfolio,
             },
-            summary: parsedData.summary || prev.summary,
+            summary: parsedData.summary || resumeData.summary,
             experience: Array.isArray(parsedData.experience) && parsedData.experience.length > 0 
               ? parsedData.experience.filter((e: any) => e.company || e.position)
-              : prev.experience,
+              : resumeData.experience,
             education: Array.isArray(parsedData.education) && parsedData.education.length > 0
               ? parsedData.education.filter((e: any) => e.institution || e.degree)
-              : prev.education,
+              : resumeData.education,
             skills: Array.isArray(parsedData.skills) && parsedData.skills.length > 0
               ? parsedData.skills
-              : prev.skills,
-          }));
+              : resumeData.skills,
+          };
+          
+          setResumeData(mergedData);
           
           toast({
             title: "Resume Parsed Successfully!",
-            description: "Form fields have been auto-filled. Review and add your target job description.",
+            description: "Now reconstructing your original format...",
           });
 
-          // Auto-suggest best template based on content
-          const suggestedTemplate = suggestTemplate(parsedData, text);
-          setSelectedTemplate(suggestedTemplate);
-          toast({
-            title: `Template Selected: ${TEMPLATE_OPTIONS.find(t => t.id === suggestedTemplate)?.name}`,
-            description: "You can change this in the template selector.",
-          });
+          // Reconstruct LaTeX that matches the original PDF's visual structure
+          try {
+            const reconstructionResult = await reconstructLaTeX(text, mergedData);
+            
+            if (reconstructionResult.success && reconstructionResult.latex) {
+              setOriginalLaTeX(reconstructionResult.latex);
+              setLiveLaTeX(reconstructionResult.latex);
+              setHasUploadedResume(true);
+              
+              toast({
+                title: "Original Format Preserved!",
+                description: "Your resume's format has been reconstructed. The live preview now shows your original layout.",
+              });
+            } else {
+              // Fallback to template-based generation
+              console.log('LaTeX reconstruction failed, falling back to template');
+              setHasUploadedResume(false);
+              
+              const suggestedTemplate = suggestTemplate(mergedData, text);
+              setSelectedTemplate(suggestedTemplate);
+              toast({
+                title: "Using Template Fallback",
+                description: `Could not fully replicate original format. Using ${TEMPLATE_OPTIONS.find(t => t.id === suggestedTemplate)?.name} template.`,
+              });
+            }
+          } catch (reconstructionError) {
+            console.error("LaTeX reconstruction error:", reconstructionError);
+            // Fallback to template
+            setHasUploadedResume(false);
+            const suggestedTemplate = suggestTemplate(mergedData, text);
+            setSelectedTemplate(suggestedTemplate);
+          }
         } else {
           throw new Error("Invalid parsed structure");
         }
@@ -902,6 +964,19 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
                 </div>
               </div>
               
+              {/* Show format mode indicator */}
+              {hasUploadedResume ? (
+                <div className="flex items-center gap-2 mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <FileText className="w-4 h-4 text-green-600" />
+                  <span className="text-sm text-green-700">
+                    <strong>Using Your Original Format</strong> - Preview matches your uploaded resume's layout
+                  </span>
+                  {isRegenerating && (
+                    <Loader2 className="w-3 h-3 animate-spin text-green-600 ml-2" />
+                  )}
+                </div>
+              ) : null}
+              
               {/* Show optimization status */}
               {isOptimizing && (
                 <div className="flex items-center gap-2 mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
@@ -916,8 +991,11 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
               <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
                 <p className="text-xs text-slate-500">
                   <Code className="w-3 h-3 inline mr-1" />
-                  LaTeX code is generated live from your data using the <strong>{TEMPLATE_OPTIONS.find(t => t.id === selectedTemplate)?.name}</strong> template.
-                  Click "View LaTeX" to see and download the code.
+                  {hasUploadedResume ? (
+                    <>LaTeX code is generated to match <strong>your original resume format</strong>. Click "View LaTeX" to see and download.</>
+                  ) : (
+                    <>LaTeX code is generated using the <strong>{TEMPLATE_OPTIONS.find(t => t.id === selectedTemplate)?.name}</strong> template. Click "View LaTeX" to see and download.</>
+                  )}
                 </p>
               </div>
             </div>
