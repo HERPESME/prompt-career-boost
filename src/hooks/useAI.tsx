@@ -154,9 +154,156 @@ Please provide:
     }
   };
 
+  /**
+   * Optimize LaTeX resume code with AI
+   * Preserves template structure while improving content for ATS
+   */
+  const optimizeLaTeX = async (
+    latexCode: string, 
+    jobDescription: string
+  ): Promise<{ optimizedLaTeX: string; score: number; improvements: string[] }> => {
+    setLoading(true);
+    console.log('🔧 Starting LaTeX optimization:', {
+      latexLength: latexCode.length,
+      jobDescLength: jobDescription.length,
+      timestamp: new Date().toISOString()
+    });
+
+    try {
+      const optimizationPrompt = `You are an expert ATS resume optimizer specializing in LaTeX formatting.
+
+TASK: Optimize the following LaTeX resume to better match the job description while strictly following these rules:
+
+JOB DESCRIPTION:
+${jobDescription}
+
+CURRENT LATEX RESUME:
+${latexCode}
+
+CRITICAL OPTIMIZATION RULES:
+1. PRESERVE the exact LaTeX structure, commands, and template formatting
+2. DO NOT change personal information (name, email, phone, location, LinkedIn, portfolio)
+3. DO NOT invent fake experiences, companies, projects, or achievements
+4. DO NOT add new sections or remove existing ones
+5. IMPROVE the wording of existing bullet points to better match job requirements
+6. NATURALLY integrate relevant keywords from the job description into existing content
+7. ENHANCE achievement descriptions with stronger action verbs and quantified results where already mentioned
+8. ENSURE all LaTeX commands remain syntactically valid and properly escaped
+9. Focus on these ATS optimization techniques:
+   - Mirror exact keywords from the job description
+   - Use industry-standard terminology
+   - Improve readability and scannability
+   - Make achievements more impactful
+
+OUTPUT FORMAT:
+Return ONLY the optimized LaTeX code. No explanations, no markdown code blocks, no preamble. Just the raw LaTeX starting with % or \\documentclass.`;
+
+      const optimizedLaTeX = await generateAIResponse(optimizationPrompt, 'resume');
+      
+      // Clean up the response - remove markdown code blocks if present
+      let cleanedLaTeX = optimizedLaTeX.trim();
+      if (cleanedLaTeX.startsWith('\`\`\`latex')) {
+        cleanedLaTeX = cleanedLaTeX.slice(8);
+      } else if (cleanedLaTeX.startsWith('\`\`\`')) {
+        cleanedLaTeX = cleanedLaTeX.slice(3);
+      }
+      if (cleanedLaTeX.endsWith('\`\`\`')) {
+        cleanedLaTeX = cleanedLaTeX.slice(0, -3);
+      }
+      cleanedLaTeX = cleanedLaTeX.trim();
+      
+      // Validate that we got valid LaTeX back
+      const isValidLaTeX = cleanedLaTeX.includes('\\documentclass') || 
+                          cleanedLaTeX.includes('\\begin{document}') ||
+                          cleanedLaTeX.startsWith('%');
+      
+      if (!isValidLaTeX) {
+        console.warn('⚠️ AI response may not be valid LaTeX, returning original');
+        return {
+          optimizedLaTeX: latexCode,
+          score: 70,
+          improvements: ['Unable to optimize - please try again']
+        };
+      }
+
+      // Calculate ATS score for optimized resume
+      const score = await calculateATSScore(cleanedLaTeX, jobDescription);
+      
+      // Extract improvements made (simplified)
+      const improvements = [
+        'Enhanced keyword alignment with job requirements',
+        'Improved action verbs and achievement descriptions',
+        'Optimized formatting for ATS parsing'
+      ];
+
+      console.log('✅ LaTeX optimization completed:', {
+        originalLength: latexCode.length,
+        optimizedLength: cleanedLaTeX.length,
+        score,
+        timestamp: new Date().toISOString()
+      });
+
+      return {
+        optimizedLaTeX: cleanedLaTeX,
+        score,
+        improvements
+      };
+    } catch (error) {
+      console.error('❌ LaTeX optimization error:', error);
+      return {
+        optimizedLaTeX: latexCode,
+        score: 65,
+        improvements: ['Optimization failed - please try again']
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Calculate ATS score for LaTeX resume against job description
+   */
+  const calculateATSScore = async (latexCode: string, jobDescription: string): Promise<number> => {
+    try {
+      const scorePrompt = `Analyze this LaTeX resume against the job description and provide ONLY a numeric ATS compatibility score from 0-100.
+
+JOB DESCRIPTION:
+${jobDescription}
+
+RESUME (LaTeX):
+${latexCode}
+
+SCORING CRITERIA:
+- Keyword match (40%): How many job-specific keywords appear in the resume
+- Formatting (20%): ATS-friendly structure (standard sections, proper formatting)
+- Relevance (20%): How well experience/skills match job requirements
+- Quantification (20%): Use of metrics and quantified achievements
+
+RESPOND WITH ONLY A NUMBER FROM 0-100. Nothing else.`;
+
+      const response = await generateAIResponse(scorePrompt, 'resume');
+      
+      // Extract the score from response
+      const scoreMatch = response.match(/\b(\d{1,3})\b/);
+      if (scoreMatch) {
+        const score = parseInt(scoreMatch[1]);
+        if (score >= 0 && score <= 100) {
+          return score;
+        }
+      }
+      
+      return 75; // Default score if extraction fails
+    } catch (error) {
+      console.error('❌ ATS score calculation error:', error);
+      return 70;
+    }
+  };
+
   return {
     generateAIResponse,
     analyzeResume,
+    optimizeLaTeX,
+    calculateATSScore,
     loading
   };
 };

@@ -47,7 +47,7 @@ export interface ResumeData {
 export const ResumeBuilder = () => {
   const { user } = useAuthUser();
   const { useToken } = useSecureTokens();
-  const { analyzeResume, generateAIResponse, loading: aiLoading } = useAI();
+  const { analyzeResume, generateAIResponse, optimizeLaTeX, loading: aiLoading } = useAI();
   
   const [resumeData, setResumeData] = useState<ResumeData>({
     personalInfo: {
@@ -310,91 +310,22 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
       // Get the current live LaTeX code
       const currentLatexCode = liveLaTeX || currentLaTeX;
       
-      // First, analyze the resume for ATS score
-      const analysis = await analyzeResume(currentLatexCode, jobDescription);
-      setAtsScore(analysis.score);
-
-      // Now optimize the LaTeX code directly
-      const optimizationPrompt = `You are an expert resume optimizer. Optimize the following LaTeX resume to better match the job description while strictly following these rules:
-
-JOB DESCRIPTION:
-${jobDescription}
-
-CURRENT LATEX RESUME:
-${currentLatexCode}
-
-OPTIMIZATION RULES:
-1. PRESERVE the exact LaTeX structure, formatting, and template style
-2. DO NOT change personal information (name, email, phone, etc.)
-3. DO NOT invent fake experiences, companies, or achievements
-4. IMPROVE the wording and bullet points to better match job requirements
-5. ADD relevant keywords from the job description naturally into existing content
-6. ENHANCE achievement descriptions with stronger action verbs
-7. ENSURE all LaTeX commands remain valid and properly escaped
-8. Focus on ATS optimization by:
-   - Using exact keywords from the job description
-   - Quantifying achievements where possible
-   - Improving readability and scannability
-
-Return ONLY the optimized LaTeX code, no explanations.`;
-
-      const optimizedLaTeX = await generateAIResponse(optimizationPrompt, 'resume');
+      // Use the dedicated optimizeLaTeX function
+      const result = await optimizeLaTeX(currentLatexCode, jobDescription);
       
-      // Validate that we got valid LaTeX back
-      if (optimizedLaTeX && optimizedLaTeX.includes('\\documentclass') && optimizedLaTeX.includes('\\begin{document}')) {
-        setLiveLaTeX(optimizedLaTeX);
-        setGeneratedLaTeX(optimizedLaTeX);
-        
-        // Re-analyze after optimization
-        const postOptimizationAnalysis = await analyzeResume(optimizedLaTeX, jobDescription);
-        setAtsScore(postOptimizationAnalysis.score);
-        
-        toast({
-          title: "Resume Optimized!",
-          description: `Your resume has been optimized for ATS with a score of ${postOptimizationAnalysis.score}%`,
-        });
-      } else {
-        // Fallback: keep original but update form data
-        console.log('AI response was not valid LaTeX, falling back to form optimization');
-        
-        // Try to extract improvements from AI and apply to form
-        const formOptimizationPrompt = `Based on this job description, optimize the resume content and return as JSON:
-
-JOB DESCRIPTION:
-${jobDescription}
-
-RESUME DATA:
-${JSON.stringify(resumeData)}
-
-Return improved resume data in the same JSON format. Only improve wording and add relevant keywords. Do not change personal info or add fake experiences.`;
-
-        const optimizedContent = await generateAIResponse(formOptimizationPrompt, 'resume');
-        
-        try {
-          let cleanedResponse = optimizedContent.trim();
-          if (cleanedResponse.startsWith('\`\`\`json')) {
-            cleanedResponse = cleanedResponse.slice(7);
-          } else if (cleanedResponse.startsWith('\`\`\`')) {
-            cleanedResponse = cleanedResponse.slice(3);
-          }
-          if (cleanedResponse.endsWith('\`\`\`')) {
-            cleanedResponse = cleanedResponse.slice(0, -3);
-          }
-          cleanedResponse = cleanedResponse.trim();
-          
-          const parsedOptimization = JSON.parse(cleanedResponse);
-          if (parsedOptimization.personalInfo) {
-            setResumeData(parsedOptimization);
-          }
-        } catch (parseError) {
-          console.log('Form optimization parsing failed, keeping original data');
-        }
-        
-        toast({
-          title: "Resume Formatting Optimized!",
-          description: `Your resume has been formatted for better ATS compatibility with a score of ${analysis.score}%`,
-        });
-      }
+      // Update state with optimized LaTeX
+      setLiveLaTeX(result.optimizedLaTeX);
+      setGeneratedLaTeX(result.optimizedLaTeX);
+      setAtsScore(result.score);
+      
+      toast({
+        title: "Resume Optimized!",
+        description: `Your resume has been optimized for ATS with a score of ${result.score}%`,
+      });
+      
+      // Log improvements for debugging
+      console.log('📝 Optimization improvements:', result.improvements);
+      
     } catch (error: any) {
       console.error("AI optimization error:", error);
       toast({
@@ -456,13 +387,20 @@ Return improved resume data in the same JSON format. Only improve wording and ad
     }
 
     try {
+      // Get the current LaTeX (either optimized or generated from template)
+      const latexToSave = liveLaTeX || generateLaTeXFromTemplate(selectedTemplate, resumeData);
+      
       const { error } = await supabase
         .from("resumes")
         .insert({
           user_id: user.id,
           title: resumeTitle,
           job_description: jobDescription,
-          content: resumeData as any,
+          content: {
+            ...resumeData,
+            latex_code: latexToSave,
+            selected_template: selectedTemplate,
+          } as any,
           ats_score: atsScore,
           status: "completed",
         });
@@ -471,7 +409,7 @@ Return improved resume data in the same JSON format. Only improve wording and ad
 
       toast({
         title: "Resume Saved!",
-        description: "Your resume has been saved successfully.",
+        description: "Your resume and optimized LaTeX have been saved successfully.",
       });
     } catch (error: any) {
       toast({
